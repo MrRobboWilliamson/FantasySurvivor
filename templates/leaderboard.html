@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="content-section">
+<h3>Competition Standings</h3>
+
+<table style="width:100%">
+    <tr>
+        <th>Player</th>
+        <th>Team</th>
+        <th>Score</th>
+    </tr>
+   {% for idx, row in leader_board.iterrows()%}
+      <tr>
+        <td>{{ row.user_nm }}</td>
+        <td>{{ row.team_nm }}</td>
+        <td>{{ '%d' | format(row.score) }}</td>
+    </tr>
+{% endfor %}
+</table>
+</div>
+{% endblock content %}
