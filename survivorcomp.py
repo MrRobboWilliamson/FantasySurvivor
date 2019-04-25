@@ -79,11 +79,37 @@ def board():
 @app.route("/contestants")
 def contestants():
     conn = sqlite3.connect('survivor.db')
-    #Display all users from the 'user' table
     conn.row_factory = dict_factory
     c = conn.cursor()
-    c.execute("SELECT * FROM contestant")
-    contestants = c.fetchall()
+    
+    # get the number of times that each contestant has been picked
+    c.execute("SELECT contestant_id, count(*) as num_picks \
+                FROM based_on \
+                GROUP BY contestant_id")
+    
+    # put into a dataframe for joining
+    picks = pd.DataFrame(data=c.fetchall())
+
+    # select the contestant details and put into data frame
+    c.execute("SELECT * \
+                FROM contestant")
+    ctemp = pd.DataFrame(data=c.fetchall())
+    # print('\n', ctemp, '\n')
+
+    # join them and fill the blanks with zeros
+    contestants = ctemp.merge(right=picks, on=['contestant_id'], how='left')
+    contestants['num_picks'] = contestants['num_picks'].fillna(0)
+    
+    # calculate popularity as a percentage of all picks and sort for presentation
+    tot_picks = contestants['num_picks'].sum()
+    contestants['pop'] = (contestants['num_picks'] / float(tot_picks)).apply(lambda x: '{:.0%}'.format(x))
+    contestants = contestants.sort_values(['num_picks', 'name'], ascending=[False, True])
+    
+    print('\n', contestants, '\n')
+
+    # convert back dictionary 
+    contestants = contestants.to_dict('records')
+
     return render_template('contestants.html', contestants=contestants)
 
 # Add User
