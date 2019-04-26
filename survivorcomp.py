@@ -6,7 +6,12 @@ import pandas as pd
 import sqlite3
 import datetime
 
+# connect to db and turn on the referential integrity constraints
 conn = sqlite3.connect('survivor.db')
+c = conn.cursor()
+c.execute('PRAGMA foreign_keys=ON;')
+
+# connect flasky things
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '5791628bb0b13ce0c676dfde280ba245'
 
