@@ -27,10 +27,7 @@
           <div class="collapse navbar-collapse" id="navbarToggle">
             <div class="navbar-nav mr-auto">
               <a class="nav-item nav-link" href="{{ url_for('blog') }}">Blog</a>
-              <a class="nav-item nav-link" href="{{ url_for('board') }}">Competition Standings</a>
-              <!-- <a class="nav-item nav-link" href="{{ url_for('contestants') }}">Season Results</a> -->
               <a class="nav-item nav-link" href="{{ url_for('contestants') }}">Survivor Contestants</a>
-              <a class="nav-item nav-link" href="{{ url_for('add_blog') }}">Add Blog</a>
             </div>
             <!-- Navbar Right Side -->
             <div class="navbar-nav">
@@ -52,7 +49,9 @@
               {% endfor %}
             {% endif %}
           {% endwith %}
-          {% block content %}{% endblock %}
+          {% block content %}
+          
+          {% endblock %}
         </div>
         <div class="col-md-4">
           <div class="content-section">

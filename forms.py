@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextField, TextAreaField, SelectField, DateTimeField
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextField, TextAreaField, SelectField, DateTimeField, validators
 from wtforms.validators import DataRequired, Length, Email, EqualTo
 import datetime
 
@@ -13,7 +13,9 @@ class RegistrationForm(FlaskForm):
 class BlogForm(FlaskForm):
     username = SelectField('Username', choices=[], coerce=int)
     # title = StringField('Title', validators=[DataRequired()])
-    content = TextAreaField('Content', validators=[DataRequired()])
+    default_text = 'Write you message here ...'
+    content = TextAreaField('Content', default=default_text,
+        validators=[DataRequired(), validators.NoneOf([default_text], message="Write something original!")])
     submit = SubmitField('Submit')
 
 # class LoginForm(FlaskForm):

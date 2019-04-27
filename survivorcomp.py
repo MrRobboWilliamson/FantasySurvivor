@@ -42,18 +42,50 @@ def feed_layout():
     out_cons = c.fetchall()
     return dict(out_cons=out_cons)
 
-@app.route("/blog")
+@app.route("/blog", methods=['GET', 'POST'])
 def blog():
+    # connect to the db and get the users
+    conn = sqlite3.connect('survivor.db')
+    conn.row_factory = dict_factory
+    c = conn.cursor() 
+    
+    c.execute('SELECT user_nm FROM CompUser')
+    results = c.fetchall()
+    users = [(results.index(item), item['user_nm']) for item in results]
+        
+    form = BlogForm()
+    form.username.choices = users
+    if form.validate_on_submit():
+        # get the users choice
+        choices = form.username.choices
+        user = (choices[form.username.data][1])
+        time_ = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
+        content = form.content.data
+
+        # clear the form data
+        form.content.data = form.content.default
+
+        # insert the blog message into the database
+        conn = sqlite3.connect('survivor.db')
+        c = conn.cursor()
+
+        # NEED TO REPLACE QUOTES WITH DOUBLE QUOTES 
+        query = 'insert into Blog (time_, user_nm, comp_nm, post) VALUES ("{}","{}", "{}", "{}")'.format(time_, user, COMPNAME, content)
+        c.execute(query)
+        conn.commit()
+
+        return redirect(url_for('blog'))
+    
     conn = sqlite3.connect('survivor.db')
 
     #Display all blogs from the 'blogs' table
     conn.row_factory = dict_factory
     c = conn.cursor()
-    c.execute("SELECT * FROM Blog")
+    c.execute("SELECT * FROM Blog \
+        ORDER BY time_ DESC")
     blogs = c.fetchall()
-    c.execute("SELECT * FROM CompUser")
-    users = c.fetchall()
-    return render_template('blog.html', posts=blogs)
+
+    return render_template('blog.html', posts=blogs, form=form)
 
 @app.route("/")
 @app.route("/leaderboard")
@@ -107,7 +139,7 @@ def contestants():
     
     # calculate popularity as a percentage of all picks and sort for presentation
     tot_picks = contestants['num_picks'].sum()
-    contestants['pop'] = (contestants['num_picks'] / float(tot_picks)).apply(lambda x: '{:.0%}'.format(x))
+    contestants['popular'] = (contestants['num_picks'] / float(tot_picks)).apply(lambda x: '{:.0%}'.format(x))
     contestants = contestants.sort_values(['num_picks', 'name'], ascending=[False, True])
     
     print('\n', contestants, '\n')
@@ -139,45 +171,45 @@ def register():
         return redirect(url_for('home'))
     return render_template('register.html', title='Register', form=form)
 
-#Add Blog
-@app.route("/add_blog", methods=['GET', 'POST'])
-def add_blog():
-    # connect to the db and get the users
-    conn = sqlite3.connect('survivor.db')
-    conn.row_factory = dict_factory
-    c = conn.cursor() 
+# #Add Blog
+# @app.route("/add_blog", methods=['GET', 'POST'])
+# def add_blog():
+#     # connect to the db and get the users
+#     conn = sqlite3.connect('survivor.db')
+#     conn.row_factory = dict_factory
+#     c = conn.cursor() 
     
-    c.execute('SELECT user_nm FROM CompUser')
-    results = c.fetchall()
-    users = [(results.index(item), item['user_nm']) for item in results]
+#     c.execute('SELECT user_nm FROM CompUser')
+#     results = c.fetchall()
+#     users = [(results.index(item), item['user_nm']) for item in results]
         
-    form = BlogForm()
-    form.username.choices = users
-    if form.validate_on_submit():
-        # get the users choice
-        choices = form.username.choices
-        user = (choices[form.username.data][1])
-        time_ = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
-        content = form.content.data
-        print('Testing the user:')
-        print(user, time_)
+#     form = BlogForm()
+#     form.username.choices = users
+#     if form.validate_on_submit():
+#         # get the users choice
+#         choices = form.username.choices
+#         user = (choices[form.username.data][1])
+#         time_ = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
+#         content = form.content.data
+#         print('Testing the user:')
+#         print(user, time_)
 
-        # insert the blog message into the database
-        conn = sqlite3.connect('survivor.db')
-        c = conn.cursor()
+#         # insert the blog message into the database
+#         conn = sqlite3.connect('survivor.db')
+#         c = conn.cursor()
 
-        # NEED TO REPLACE QUOTES WITH DOUBLE QUOTES 
-        query = 'insert into Blog (time_, user_nm, comp_nm, post) VALUES ("{}","{}", "{}", "{}")'.format(time_, user, COMPNAME, content)
+#         # NEED TO REPLACE QUOTES WITH DOUBLE QUOTES 
+#         query = 'insert into Blog (time_, user_nm, comp_nm, post) VALUES ("{}","{}", "{}", "{}")'.format(time_, user, COMPNAME, content)
 
-        print(query)
+#         print(query)
 
-        c.execute(query)
-        conn.commit()
+#         c.execute(query)
+#         conn.commit()
 
-        flash(f'Blog created for {user}!', 'success')
-        return redirect(url_for('blog'))
+#         flash(f'Blog created for {user}!', 'success')
+#         # return redirect(url_for('blog'))
 
-    return render_template('add_blog.html', form=form)
+#     return render_template('add_blog.html', form=form)
 
 if __name__ == '__main__':
     app.run(debug=True)
