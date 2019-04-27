@@ -1,7 +1,7 @@
 ### Example inspired by Tutorial at https://www.youtube.com/watch?v=MwZwr5Tvyxo&list=PL-osiE80TeTs4UjLw5MM6OjgkjFeUxCYH
 ### However the actual example uses sqlalchemy which uses Object Relational Mapper, which are not covered in this course. I have instead used natural sQL queries for this demo. 
 from flask import Flask, render_template, url_for, flash, redirect
-from forms import RegistrationForm, BlogForm
+from forms import RegistrationForm, BlogForm, EditForm
 import pandas as pd
 import sqlite3
 import datetime
@@ -9,20 +9,29 @@ import datetime
 # connect to db and turn on the referential integrity constraints
 conn = sqlite3.connect('survivor.db')
 c = conn.cursor()
-c.execute('PRAGMA foreign_keys=ON;')
 
 # connect flasky things
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '5791628bb0b13ce0c676dfde280ba245'
 
-#Turn the results from the database into a dictionary
+# Turn the results from the database into a dictionary
 def dict_factory(cursor, row):
     d = {}
     for idx, col in enumerate(cursor.description):
         d[col[0]] = row[idx]
     return d
 
-# get the competition name
+# Function to connect to the database everytime
+def get_db():
+    conn = sqlite3.connect('survivor.db')
+    conn.row_factory = dict_factory
+    c = conn.cursor()
+    
+    # enforce integrity constraints 
+    c.execute("PRAGMA foreign_keys=ON;")
+    return c, conn
+
+# Get the competition name
 conn = sqlite3.connect('survivor.db')
 conn.row_factory = dict_factory
 c = conn.cursor()
@@ -45,10 +54,7 @@ def feed_layout():
 @app.route("/blog", methods=['GET', 'POST'])
 def blog():
     # connect to the db and get the users
-    conn = sqlite3.connect('survivor.db')
-    conn.row_factory = dict_factory
-    c = conn.cursor() 
-    
+    c, conn = get_db()    
     c.execute('SELECT user_nm FROM CompUser')
     results = c.fetchall()
     users = [(results.index(item), item['user_nm']) for item in results]
@@ -66,13 +72,10 @@ def blog():
         form.content.data = form.content.default
 
         # insert the blog message into the database
-        conn = sqlite3.connect('survivor.db')
-        c = conn.cursor()
-
-        # NEED TO REPLACE QUOTES WITH DOUBLE QUOTES 
+        c, conn = get_db()
         query = 'insert into Blog (time_, user_nm, comp_nm, post) VALUES ("{}","{}", "{}", "{}")'.format(time_, user, COMPNAME, content)
         c.execute(query)
-        conn.commit()
+        
 
         return redirect(url_for('blog'))
     
@@ -87,13 +90,61 @@ def blog():
 
     return render_template('blog.html', posts=blogs, form=form)
 
+@app.route("/blog/edit/<time>/<username>/<comp_name>", methods=['GET', 'POST'])
+def blog_detail_view_edit(time, username, comp_name):
+    # conv
+    c, conn = get_db()
+    time = time.replace('-', '/')
+    c.execute("SELECT * FROM Blog where time_=? and user_nm=? and comp_nm=?", [time, username, comp_name]) 
+    blog = c.fetchone()
+    if blog:
+        # Render a detailForm and show it.
+        form = EditForm()
+        form.content.data = blog['post']
+
+        # on submit update with the new data
+        if form.validate_on_submit():
+            # get the new post
+            new_post = form.content.data
+
+            # commit it to the database
+            c, conn = get_db()
+            c.execute("UPDATE Blog \
+                SET post=? \
+                WHERE time_=? and user_nm=? and comp_nm=?", (new_post, time, username, comp_name))
+            conn.commit()
+            return redirect(url_for('blog'))
+
+    else:
+        # TODO: return 404 page
+        return "Not found"
+    return render_template('edit.html', form=form)
+
+@app.route("/blog/delete/<time>/<username>/<comp_name>")
+def blog_detail_view_delete(time, username, comp_name):
+    # conv
+    c, conn = get_db()
+    time = time.replace('-', '/')
+    c.execute("SELECT * FROM Blog where time_=? and user_nm=? and comp_nm=?", [time, username, comp_name]) 
+    blog = c.fetchone()
+    if blog:
+
+        return 'Are you sure you want to delete:\n"{}"'.format(blog['post'])
+
+    # If GET:
+    # Render a template that says "are you sure" + with a form that will submit if YES to the same url otherwiswe  back to /blog
+
+    # If POST:
+    # Do a sql to delete the blog and redirect to /blog
+    else:
+        # how to do a 404??
+        return "Not found"
+
 @app.route("/")
 @app.route("/leaderboard")
 def board():
     # Run a query to calculate all of the user scores    
-    conn = sqlite3.connect('survivor.db')
-    conn.row_factory = dict_factory
-    c = conn.cursor()
+    c, conn = get_db()
 
     # Query for the teams
     query = 'select p.user_nm, t.team_nm, c.name, c.ep_no\
@@ -115,9 +166,7 @@ def board():
 
 @app.route("/contestants")
 def contestants():
-    conn = sqlite3.connect('survivor.db')
-    conn.row_factory = dict_factory
-    c = conn.cursor()
+    c, conn = get_db()
     
     # get the number of times that each contestant has been picked
     c.execute("SELECT contestant_id, count(*) as num_picks \

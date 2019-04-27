@@ -45,8 +45,8 @@
           <div class="article-metadata">
             <a class="mr-2" >{{ post.user_nm }}</a>
             <a class="mr-2" >{{ post.time_ }}</a>
-            <a class="ml-2" >edit</a>
-            <a class="ml-2" >delete</a>
+            <a href="/blog/edit/{{ post.time_.replace('/', '-') }}/{{ post.user_nm }}/{{ post.comp_nm }}" class="ml-2" >edit</a>
+            <a href="/blog/delete/{{ post.time_.replace('/', '-') }}/{{ post.user_nm }}/{{ post.comp_nm }}" class="ml-2" >delete</a>
           </div>
           <!-- <h2><a class="article-title" href="#">{{ post.content }}</a></h2> -->
           <p class="article-content">{{ post.post }}</p>

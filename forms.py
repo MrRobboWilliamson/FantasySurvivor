@@ -17,6 +17,8 @@ class BlogForm(FlaskForm):
 
 # class LoginForm(FlaskForm):
 #     username = Select
-
+class EditForm(FlaskForm):
+    content = TextAreaField('Content', validators=[DataRequired()])
+    submit = SubmitField('Submit')
     
     
