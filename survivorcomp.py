@@ -168,48 +168,9 @@ def register():
         conn.commit()
         
         flash(f'Account created for {form.username.data}!', 'success')
-        return redirect(url_for('home'))
-    return render_template('register.html', title='Register', form=form)
-
-# #Add Blog
-# @app.route("/add_blog", methods=['GET', 'POST'])
-# def add_blog():
-#     # connect to the db and get the users
-#     conn = sqlite3.connect('survivor.db')
-#     conn.row_factory = dict_factory
-#     c = conn.cursor() 
-    
-#     c.execute('SELECT user_nm FROM CompUser')
-#     results = c.fetchall()
-#     users = [(results.index(item), item['user_nm']) for item in results]
+        return redirect(url_for('board'))
         
-#     form = BlogForm()
-#     form.username.choices = users
-#     if form.validate_on_submit():
-#         # get the users choice
-#         choices = form.username.choices
-#         user = (choices[form.username.data][1])
-#         time_ = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
-#         content = form.content.data
-#         print('Testing the user:')
-#         print(user, time_)
-
-#         # insert the blog message into the database
-#         conn = sqlite3.connect('survivor.db')
-#         c = conn.cursor()
-
-#         # NEED TO REPLACE QUOTES WITH DOUBLE QUOTES 
-#         query = 'insert into Blog (time_, user_nm, comp_nm, post) VALUES ("{}","{}", "{}", "{}")'.format(time_, user, COMPNAME, content)
-
-#         print(query)
-
-#         c.execute(query)
-#         conn.commit()
-
-#         flash(f'Blog created for {user}!', 'success')
-#         # return redirect(url_for('blog'))
-
-#     return render_template('add_blog.html', form=form)
+    return render_template('register.html', title='Register', form=form)
 
 if __name__ == '__main__':
     app.run(debug=True)

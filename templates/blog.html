@@ -20,7 +20,8 @@
                 {% endif %}
             </div>           
                 <div class="form-group">
-                        {{ form.content.label(class="form-control-label") }}    
+                        {{ form.content.label(class="form-control-label") }}
+                        {{ form.placeholder}}
                         {% if form.content.errors %}
                             {{ form.content(class="form-control form-control-lg is-invalid") }}
                             <div class="invalid-feedback">
@@ -38,13 +39,14 @@
         </div>
     </form>
 </div>
-
     {% for post in posts %}
       <article class="media content-section">
         <div class="media-body">
           <div class="article-metadata">
             <a class="mr-2" >{{ post.user_nm }}</a>
             <a class="mr-2" >{{ post.time_ }}</a>
+            <a class="ml-2" >edit</a>
+            <a class="ml-2" >delete</a>
           </div>
           <!-- <h2><a class="article-title" href="#">{{ post.content }}</a></h2> -->
           <p class="article-content">{{ post.post }}</p>

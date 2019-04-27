@@ -12,10 +12,7 @@ class RegistrationForm(FlaskForm):
 
 class BlogForm(FlaskForm):
     username = SelectField('Username', choices=[], coerce=int)
-    # title = StringField('Title', validators=[DataRequired()])
-    default_text = 'Write you message here ...'
-    content = TextAreaField('Content', default=default_text,
-        validators=[DataRequired(), validators.NoneOf([default_text], message="Write something original!")])
+    content = TextAreaField('Content', validators=[DataRequired()], render_kw=dict(placeholder='Write your message here ... '))
     submit = SubmitField('Submit')
 
 # class LoginForm(FlaskForm):
