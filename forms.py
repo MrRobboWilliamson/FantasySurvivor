@@ -12,13 +12,17 @@ class RegistrationForm(FlaskForm):
 
 class BlogForm(FlaskForm):
     username = SelectField('Username', choices=[], coerce=int)
-    content = TextAreaField('Content', validators=[DataRequired()], render_kw=dict(placeholder='Write your message here ... '))
+    content = TextAreaField(validators=[DataRequired()], render_kw=dict(placeholder='Send message'))
     submit = SubmitField('Submit')
 
 # class LoginForm(FlaskForm):
 #     username = Select
 class EditForm(FlaskForm):
-    content = TextAreaField('Content', validators=[DataRequired()])
+    content = TextAreaField('Edit message', validators=[DataRequired()])
     submit = SubmitField('Submit')
-    
-    
+
+# delete form is just a button
+class DelForm(FlaskForm):
+    # content = TextAreaField('Edit message', validators=[DataRequired()])
+    delete_btn = SubmitField('Delete')
+    cancel_btn = SubmitField('Cancel')

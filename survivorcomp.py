@@ -1,14 +1,10 @@
 ### Example inspired by Tutorial at https://www.youtube.com/watch?v=MwZwr5Tvyxo&list=PL-osiE80TeTs4UjLw5MM6OjgkjFeUxCYH
 ### However the actual example uses sqlalchemy which uses Object Relational Mapper, which are not covered in this course. I have instead used natural sQL queries for this demo. 
-from flask import Flask, render_template, url_for, flash, redirect
-from forms import RegistrationForm, BlogForm, EditForm
+from flask import Flask, render_template, url_for, flash, redirect, request
+from forms import RegistrationForm, BlogForm, EditForm, DelForm
 import pandas as pd
 import sqlite3
 import datetime
-
-# connect to db and turn on the referential integrity constraints
-conn = sqlite3.connect('survivor.db')
-c = conn.cursor()
 
 # connect flasky things
 app = Flask(__name__)
@@ -32,18 +28,14 @@ def get_db():
     return c, conn
 
 # Get the competition name
-conn = sqlite3.connect('survivor.db')
-conn.row_factory = dict_factory
-c = conn.cursor()
+c, conn = get_db()
 c.execute("SELECT distinct comp_nm \
         FROM FantasyCompetition")
 COMPNAME = c.fetchall()[0]['comp_nm'] 
 
 @app.context_processor
 def feed_layout():
-    conn = sqlite3.connect('survivor.db')
-    conn.row_factory = dict_factory
-    c = conn.cursor()
+    c, conn = get_db()
     c.execute("SELECT name, ep_no \
         FROM contestant \
         Where ep_no is not Null \
@@ -68,14 +60,11 @@ def blog():
         time_ = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
         content = form.content.data
 
-        # clear the form data
-        form.content.data = form.content.default
-
         # insert the blog message into the database
         c, conn = get_db()
         query = 'insert into Blog (time_, user_nm, comp_nm, post) VALUES ("{}","{}", "{}", "{}")'.format(time_, user, COMPNAME, content)
         c.execute(query)
-        
+        conn.commit()        
 
         return redirect(url_for('blog'))
     
@@ -101,11 +90,12 @@ def blog_detail_view_edit(time, username, comp_name):
         # Render a detailForm and show it.
         form = EditForm()
         form.content.data = blog['post']
-
-        # on submit update with the new data
+        
         if form.validate_on_submit():
             # get the new post
             new_post = form.content.data
+
+            print("What is the new post?", new_post)
 
             # commit it to the database
             c, conn = get_db()
@@ -114,31 +104,34 @@ def blog_detail_view_edit(time, username, comp_name):
                 WHERE time_=? and user_nm=? and comp_nm=?", (new_post, time, username, comp_name))
             conn.commit()
             return redirect(url_for('blog'))
-
     else:
         # TODO: return 404 page
         return "Not found"
     return render_template('edit.html', form=form)
 
-@app.route("/blog/delete/<time>/<username>/<comp_name>")
+@app.route("/blog/delete/<time>/<username>/<comp_name>", methods=['GET', 'POST'])
 def blog_detail_view_delete(time, username, comp_name):
-    # conv
-    c, conn = get_db()
+    # get the form with the buttons
+    form = DelForm()
     time = time.replace('-', '/')
-    c.execute("SELECT * FROM Blog where time_=? and user_nm=? and comp_nm=?", [time, username, comp_name]) 
-    blog = c.fetchone()
-    if blog:
+    if form.validate_on_submit():
+        if 'delete_btn' in request.form:
+            print('Delete request')
+            # delete the post
+            c, conn = get_db()
+            c.execute("DELETE FROM Blog \
+                WHERE time_=? and user_nm=? and comp_nm=?", [time, username, comp_name])
+            conn.commit()
+            return redirect(url_for('blog'))
+        elif 'cancel_btn' in request.form:
+            print('Cancel request')
 
-        return 'Are you sure you want to delete:\n"{}"'.format(blog['post'])
+            # if cancelled, then just redirect
+            return redirect(url_for('blog'))
+        else:
+            print("That didn't work!")
 
-    # If GET:
-    # Render a template that says "are you sure" + with a form that will submit if YES to the same url otherwiswe  back to /blog
-
-    # If POST:
-    # Do a sql to delete the blog and redirect to /blog
-    else:
-        # how to do a 404??
-        return "Not found"
+    return render_template('delete.html', form=form)
 
 @app.route("/")
 @app.route("/leaderboard")
