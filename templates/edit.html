@@ -6,7 +6,6 @@
         <fieldset class="form-group">
             <div class="form-group">
                 {{ form.content.label(class="form-control-label") }}
-                {{ form.placeholder}}
                 {% if form.content.errors %}
                     {{ form.content(class="form-control form-control-lg is-invalid") }}
                         <div class="invalid-feedback">
@@ -21,6 +20,7 @@
         </fieldset>
         <div class="form-group">
             {{ form.submit(class="btn btn-outline-info") }}
+            {{ form.cancel_btn(class="btn btn-outline-info") }}
         </div>
     </form>
 </div>

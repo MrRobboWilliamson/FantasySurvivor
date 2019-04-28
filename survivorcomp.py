@@ -90,20 +90,22 @@ def blog_detail_view_edit(time, username, comp_name):
         # Render a detailForm and show it.
         form = EditForm()
         form.content.data = blog['post']
-        
         if form.validate_on_submit():
-            # get the new post
-            new_post = form.content.data
+            if 'submit' in request.form:
+                # get the new post
+                new_post = request.form.get('content')
+                print("What is the new post?", new_post)
 
-            print("What is the new post?", new_post)
-
-            # commit it to the database
-            c, conn = get_db()
-            c.execute("UPDATE Blog \
-                SET post=? \
-                WHERE time_=? and user_nm=? and comp_nm=?", (new_post, time, username, comp_name))
-            conn.commit()
-            return redirect(url_for('blog'))
+                # commit it to the database
+                c, conn = get_db()
+                c.execute("UPDATE Blog \
+                    SET post=? \
+                    WHERE time_=? and user_nm=? and comp_nm=?", (new_post, time, username, comp_name))
+                conn.commit()
+                return redirect(url_for('blog'))
+            elif 'cancel_btn' in request.form:
+                # if cancelling then just redirect back to the message board
+                return redirect(url_for('blog'))
     else:
         # TODO: return 404 page
         return "Not found"

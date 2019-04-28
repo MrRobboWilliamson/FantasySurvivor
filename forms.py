@@ -20,6 +20,7 @@ class BlogForm(FlaskForm):
 class EditForm(FlaskForm):
     content = TextAreaField('Edit message', validators=[DataRequired()])
     submit = SubmitField('Submit')
+    cancel_btn = SubmitField('Cancel')
 
 # delete form is just a button
 class DelForm(FlaskForm):
