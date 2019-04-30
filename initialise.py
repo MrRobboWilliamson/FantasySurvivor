@@ -196,7 +196,7 @@ c.execute("delete from Based_on;")
 conn.commit()
 
 ### EPISODES ###
-# populate the episode, contestant and teams tables
+# populate the episode table
 conn = sqlite3.connect('survivor.db')
 c = conn.cursor()
 for idx, row in episodes.iterrows():
@@ -205,14 +205,21 @@ for idx, row in episodes.iterrows():
 conn.commit()
 
 ### CONTESTANTS ### 
-# populate the episode, contestant and teams tables
+# populate the contestant table
 conn = sqlite3.connect('survivor.db')
 c = conn.cursor()
+
+# print('\n', contestants, '\n')
+
 for idx, row in contestants.iterrows():
     # add to the query
-    epno = int(row['voted_out']) if row['voted_out'] > 0 else 'Null' 
-    c.execute('INSERT INTO Contestant (name, age, origin_town, season_no, ep_no)\
-         VALUES ("{}", {}, "{}", {}, {});'.format(row['full_name'], row['age'], row['origin_town'], 38, epno))
+    try:    
+        epno = int(row['voted_out']) if row['voted_out'] > 0 else 'Null' 
+        c.execute('INSERT INTO Contestant (name, age, origin_town, season_no, ep_no)\
+            VALUES ("{}", {}, "{}", {}, {});'.format(row['full_name'], row['age'], row['origin_town'], 38, epno))
+    except:
+        print('Contestant Error: row,', idx)
+
 conn.commit()
 
 ### Make the teams ###

@@ -3,8 +3,11 @@
 from flask import Flask, render_template, url_for, flash, redirect, request
 from forms import RegistrationForm, BlogForm, EditForm, DelForm
 import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
 import sqlite3
 import datetime
+import initialise
 
 # connect flasky things
 app = Flask(__name__)
@@ -31,7 +34,47 @@ def get_db():
 c, conn = get_db()
 c.execute("SELECT distinct comp_nm \
         FROM FantasyCompetition")
-COMPNAME = c.fetchall()[0]['comp_nm'] 
+COMPNAME = c.fetchall()[0]['comp_nm']
+
+# Progress chart
+def chart_progress(df):
+    '''
+    Get the contestants and loop through in order of the episode out
+    to create a progress chart
+    '''
+    # get contestant and teams data from the db
+    c, conn = get_db()
+    c.execute('Select * from contestant \
+        where ep_no is not null \
+        order by ep_no')
+    contestants = pd.DataFrame(c.fetchall())
+    
+    # zero out the ep_no in the teams df
+    df['ep_no'] = pd.np.nan
+    print('\n\nProgress calcs:')
+    progress = pd.DataFrame()
+    num_eps = 24
+    for idx, row in contestants.iterrows():
+        ep_no = row['ep_no']
+        name = row['name']
+
+        # assign score to all of the teams
+        df[df['name']==name]['ep_no'] = ep_no
+
+        # fill the rest with ep_no + 1
+        mdf = df.copy()
+        mdf['ep_no'].fillna(ep_no+1, inplace=True)
+
+        # aggregate the scores
+        this_ep = mdf.groupby(['user_nm', 'team_nm'])['ep_no'].agg('sum').reset_index(). \
+                sort_values(['ep_no'], ascending=False).rename(columns={'ep_no':'score'})
+        this_ep['ep_no'] = ep_no
+        progress = progress.append(this_ep)
+
+    fig = plt.figure()
+    sns.lineplot(x='ep_no', y='score', hue='team_nm', data=progress)
+    plt.savefig(r"static\progress.png")
+    print('\n\n')
 
 @app.context_processor
 def feed_layout():
@@ -148,15 +191,18 @@ def board():
     c.execute(query)   
     df = pd.DataFrame(c.fetchall())
 
+    # get chart
+    chart_progress(df)
+
     # Query for the episodes
     c.execute('Select MAX(ep_no) as max from Episode')
     epmax = c.fetchall()[0]['max']
-    df = df.fillna(epmax+1)
+    mdf = df.fillna(epmax+1)
 
     # aggregate the scores
-    leader_board = df.groupby(['user_nm', 'team_nm'])['ep_no'].agg('sum').reset_index(). \
+    leader_board = mdf.groupby(['user_nm', 'team_nm'])['ep_no'].agg('sum').reset_index(). \
         sort_values(['ep_no'], ascending=False).rename(columns={'ep_no':'score'})
-   
+    
     return render_template('leaderboard.html', leader_board=leader_board)
 
 @app.route("/contestants")
