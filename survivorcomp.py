@@ -1,7 +1,7 @@
 ### Example inspired by Tutorial at https://www.youtube.com/watch?v=MwZwr5Tvyxo&list=PL-osiE80TeTs4UjLw5MM6OjgkjFeUxCYH
 ### However the actual example uses sqlalchemy which uses Object Relational Mapper, which are not covered in this course. I have instead used natural sQL queries for this demo. 
 from flask import Flask, render_template, url_for, flash, redirect
-from forms import RegistrationForm, BlogForm
+from forms import RegistrationForm, BlogForm, LoginForm
 import pandas as pd
 import sqlite3
 import datetime
@@ -173,6 +173,36 @@ def add_blog():
         return redirect(url_for('blog'))
 
     return render_template('add_blog.html', form=form)
+
+#Add Login feature
+@app.route("/login", methods=['GET', 'POST'])
+def login():
+    error = None
+    conn = sqlite3.connect('survivor.db')
+    conn.row_factory = dict_factory
+    c = conn.cursor() 
+    
+    c.execute('SELECT user_nm FROM CompUser')
+    result = c.fetchall()
+    users = [item['user_nm'] for item in result]
+
+    print('\n\n', users)
+
+    print('\n\n')
+
+    form = LoginForm()
+    content = form.username.data
+
+    if content in users:
+        flash(f'Logged in as {content}!', 'success')
+
+        print('success')
+    else:   
+        error = 'Invalid Credentials. Please try again.'
+        print(error)
+
+    return render_template('login.html', form=form, error=error)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
