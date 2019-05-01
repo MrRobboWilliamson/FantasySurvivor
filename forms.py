@@ -11,12 +11,12 @@ class RegistrationForm(FlaskForm):
     submit = SubmitField('Sign Up')
 
 class BlogForm(FlaskForm):
-    username = SelectField('Username', choices=[], coerce=int)
+    # username = SelectField('Username', choices=[], coerce=int)
     content = TextAreaField(validators=[DataRequired()], render_kw=dict(placeholder='Send message'))
     submit = SubmitField('Submit')
 
 class LoginForm(FlaskForm):
-    username = TextAreaField('Username',validators=EqualTo)
+    username = SelectField('Username', choices=[], coerce=int)
     submit = SubmitField('Submit')
 
 # class LoginForm(FlaskForm):
