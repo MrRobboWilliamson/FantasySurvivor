@@ -1,7 +1,7 @@
 ### Example inspired by Tutorial at https://www.youtube.com/watch?v=MwZwr5Tvyxo&list=PL-osiE80TeTs4UjLw5MM6OjgkjFeUxCYH
 ### However the actual example uses sqlalchemy which uses Object Relational Mapper, which are not covered in this course. I have instead used natural sQL queries for this demo. 
 from flask import Flask, render_template, url_for, flash, redirect, request
-from forms import RegistrationForm, BlogForm, EditForm, DelForm
+from forms import RegistrationForm, BlogForm, EditForm, DelForm, LoginForm
 import pandas as pd
 import seaborn as sns
 import matplotlib
@@ -268,6 +268,36 @@ def register():
         return redirect(url_for('board'))
         
     return render_template('register.html', title='Register', form=form)
+
+#Add Login feature
+@app.route("/login", methods=['GET', 'POST'])
+def login():
+    error = None
+    conn = sqlite3.connect('survivor.db')
+    conn.row_factory = dict_factory
+    c = conn.cursor() 
+    
+    c.execute('SELECT user_nm FROM CompUser')
+    result = c.fetchall()
+    users = [item['user_nm'] for item in result]
+
+    print('\n\n', users)
+
+    print('\n\n')
+
+    form = LoginForm()
+    content = form.username.data
+
+    if content in users:
+        flash(f'Logged in as {content}!', 'success')
+
+        print('success')
+    else:   
+        error = 'Invalid Credentials. Please try again.'
+        print(error)
+
+    return render_template('login.html', form=form, error=error)
+
 
 if __name__ == '__main__':
     app.run(debug=True)

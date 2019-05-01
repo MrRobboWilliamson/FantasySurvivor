@@ -15,6 +15,10 @@ class BlogForm(FlaskForm):
     content = TextAreaField(validators=[DataRequired()], render_kw=dict(placeholder='Send message'))
     submit = SubmitField('Submit')
 
+class LoginForm(FlaskForm):
+    username = TextAreaField('Username',validators=EqualTo)
+    submit = SubmitField('Submit')
+
 # class LoginForm(FlaskForm):
 #     username = Select
 class EditForm(FlaskForm):
