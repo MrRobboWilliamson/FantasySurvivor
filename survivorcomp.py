@@ -284,7 +284,7 @@ def login():
     results = c.fetchall()
     users = [(results.index(item), item['user_nm']) for item in results]
         
-    form = BlogForm()
+    form = LoginForm()
     form.username.choices = users
     if form.validate_on_submit():
         # get the users choice
