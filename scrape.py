@@ -238,7 +238,7 @@ class WikiTable():
                 try:
                     cell = cells[adj_idx]
                 except Exception:
-                    print("   - row {} has {} cells | we're trying to index {}\n".format(
+                    print("GetSimpleError: [row {} has {} cells | we're trying to index {}]\n".format(
                         row_idx, len(cells), adj_idx))                
                 
                 # if not cell.attrs.get('style'):

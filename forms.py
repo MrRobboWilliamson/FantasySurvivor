@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextField, TextAreaField, SelectField, DateTimeField
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextField, TextAreaField, SelectField, DateTimeField, validators
 from wtforms.validators import DataRequired, Length, Email, EqualTo
 import datetime
 
@@ -12,13 +12,22 @@ class RegistrationForm(FlaskForm):
 
 class BlogForm(FlaskForm):
     username = SelectField('Username', choices=[], coerce=int)
-    # title = StringField('Title', validators=[DataRequired()])
-    content = TextAreaField('Content', validators=[DataRequired()])
+    content = TextAreaField(validators=[DataRequired()], render_kw=dict(placeholder='Send message'))
     submit = SubmitField('Submit')
 
 class LoginForm(FlaskForm):
     username = TextAreaField('Username',validators=EqualTo)
     submit = SubmitField('Submit')
 
-    
-    
+# class LoginForm(FlaskForm):
+#     username = Select
+class EditForm(FlaskForm):
+    content = TextAreaField('Edit message', validators=[DataRequired()])
+    submit = SubmitField('Submit')
+    cancel_btn = SubmitField('Cancel')
+
+# delete form is just a button
+class DelForm(FlaskForm):
+    # content = TextAreaField('Edit message', validators=[DataRequired()])
+    delete_btn = SubmitField('Delete')
+    cancel_btn = SubmitField('Cancel')

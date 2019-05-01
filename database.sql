@@ -32,7 +32,11 @@ PRIMARY KEY (user_nm)
 create table ParticipatingUser
 (user_nm varchar(255), 
 primary key (user_nm),
-FOREIGN key (user_nm) REFERENCES CompUser);
+CONSTRAINT fk_user
+    FOREIGN KEY (user_nm)
+    REFERENCES CompUser(user_nm)
+    ON DELETE CASCADE    
+);
 
 /* team */
 create table Team
@@ -40,8 +44,15 @@ create table Team
 user_nm varchar(255),
 comp_nm varchar(255),
 primary key (team_nm),
-foreign key (user_nm) REFERENCES ParticipatingUser,
-FOReign key (comp_nm) REFERENCES FantasyCompetition);
+constraint fk_user
+    foreign key (user_nm)
+    REFERENCES ParticipatingUser(user_nm)
+    on delete cascade,
+constraint fk_comp
+    FOReign key (comp_nm)
+    REFERENCES FantasyCompetition(comp_nm)
+    on delete cascade
+);
 
 /* series table */
 Create Table Series
@@ -96,13 +107,19 @@ user_nm varchar(255),
 comp_nm varchar(255),
 post varchar(255),
 PRIMARY KEY (time_, user_nm, comp_nm),
-FOREIGN KEY (user_nm) REFERENCES CompUser,
-FOREIGN KEY (comp_nm) references FantasyCompetition
+constraint fk_user
+    FOREIGN KEY (user_nm)
+    REFERENCES CompUser(user_nm)
+    on delete cascade,
+constraint fk_comp
+    FOREIGN KEY (comp_nm)
+    references FantasyCompetition(comp_nm)
+    on delete cascade
 );
 
 /*Create the 'blogs' table*/
-CREATE TABLE From_previous (
-contestant_id INT,
+CREATE TABLE From_previous
+(contestant_id INT,
 season_no INT,
 FOREIGN KEY (season_no) REFERENCES Season,
 FOREIGN KEY (contestant_id) REFERENCES Contestant
@@ -144,3 +161,6 @@ Insert into Team values ('Veracity', 'Sarah', 'Milton Crew');
 -- insert into blogs(username, title, content) VALUES ('James', 'The best Data Science courses', 'One of the best courses I have taken is INFS7901');
 -- insert into blogs(username, title, content) VALUES ('James', 'How to Build a Data Science Portfolio', 'The best way to build a data science portfolio is to do a project');
 -- insert into blogs(username, title, content) VALUES ('Jane', 'Blockchain Could Unlock Vital Funding to Tackle Climate Change', 'Billions of dollars in promised funding is failing to reach the world’s poorest countries — but technologists have a fix in mind .....');
+
+
+/* I think I need to commit here */

@@ -1,15 +1,58 @@
 {% extends "layout.html" %}
 {% block content %}
+<div class="content-section">
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        <fieldset class="form-group">
+            <!-- <legend class="border-bottom mb-4">Create New Blog</legend> -->
+            <div class="form-group">
+                {{ form.username.label(class="form-control-label") }}
+
+                {% if form.username.errors %}
+                    {{ form.username(class="form-control form-control-lg is-invalid") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.username.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.username(class="form-control form-control-lg") }}
+                {% endif %}
+            </div>           
+                <div class="form-group">
+                        <!-- {{ form.content.label(class="form-control-label") }} -->
+                        {{ form.placeholder}}
+                        {% if form.content.errors %}
+                            {{ form.content(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.username.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.content(class="form-control form-control-lg") }}
+                        {% endif %}
+                    </div>
+        </fieldset>
+        <div class="form-group">
+            {{ form.submit(class="btn btn-outline-info") }}
+        </div>
+    </form>
+</div>
     {% for post in posts %}
-        <article class="media content-section">
-          <div class="media-body">
-            <div class="article-metadata">
-              <a class="mr-2" href="#">{{ post.user_nm }}</a>
-              <a class="mr-2" href='#'>{{ post.time_ }}</a>
-            </div>
-            <!-- <h2><a class="article-title" href="#">{{ post.content }}</a></h2> -->
-            <p class="article-content">{{ post.post }}</p>
+      <article class="media content-section">
+        <div class="media-body">
+          <div class="article-metadata">
+            <a class="mr-2" >{{ post.user_nm }}</a>
+            <a class="mr-2" >{{ post.time_ }}</a>
+            <a href="/blog/edit/{{ post.time_.replace('/', '-') }}/{{ post.user_nm }}/{{ post.comp_nm }}" class="ml-2" >edit</a>
+            <a href="/blog/delete/{{ post.time_.replace('/', '-') }}/{{ post.user_nm }}/{{ post.comp_nm }}" class="ml-2" >delete</a>
           </div>
-        </article>
+          <!-- <h2><a class="article-title" href="#">{{ post.content }}</a></h2> -->
+          <p class="article-content">{{ post.post }}</p>
+        </div>
+      </article>
     {% endfor %}
+
+
 {% endblock content %}

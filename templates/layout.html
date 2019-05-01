@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
 
     {% if title %}
         <title>Fantasy Survivor - {{ title }}</title>
@@ -27,10 +28,7 @@
           <div class="collapse navbar-collapse" id="navbarToggle">
             <div class="navbar-nav mr-auto">
               <a class="nav-item nav-link" href="{{ url_for('blog') }}">Blog</a>
-              <a class="nav-item nav-link" href="{{ url_for('board') }}">Competition Standings</a>
-              <!-- <a class="nav-item nav-link" href="{{ url_for('contestants') }}">Season Results</a> -->
               <a class="nav-item nav-link" href="{{ url_for('contestants') }}">Survivor Contestants</a>
-              <a class="nav-item nav-link" href="{{ url_for('add_blog') }}">Add Blog</a>
               <a class="nav-item nav-link" href="{{ url_for('login') }}">Login</a>
             </div>
             <!-- Navbar Right Side -->
@@ -53,7 +51,9 @@
               {% endfor %}
             {% endif %}
           {% endwith %}
-          {% block content %}{% endblock %}
+          {% block content %}
+          
+          {% endblock %}
         </div>
         <div class="col-md-4">
           <div class="content-section">
