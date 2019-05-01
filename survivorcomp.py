@@ -4,10 +4,14 @@ from flask import Flask, render_template, url_for, flash, redirect, request
 from forms import RegistrationForm, BlogForm, EditForm, DelForm
 import pandas as pd
 import seaborn as sns
+import matplotlib
+matplotlib.use('Agg') # configure to webapp 
 import matplotlib.pyplot as plt
 import sqlite3
 import datetime
 import initialise
+from io import BytesIO
+from PIL import Image
 
 # connect flasky things
 app = Flask(__name__)
@@ -51,30 +55,33 @@ def chart_progress(df):
     
     # zero out the ep_no in the teams df
     df['ep_no'] = pd.np.nan
-    print('\n\nProgress calcs:')
     progress = pd.DataFrame()
     num_eps = 24
     for idx, row in contestants.iterrows():
         ep_no = row['ep_no']
         name = row['name']
 
-        # assign score to all of the teams
-        df[df['name']==name]['ep_no'] = ep_no
+        # assign score to the teams that the evictee from this episode
+        df.loc[df['name']==name, ['ep_no']] = ep_no
 
-        # fill the rest with ep_no + 1
+        # fill the rest with ep_no + 1 as their potential score
         mdf = df.copy()
         mdf['ep_no'].fillna(ep_no+1, inplace=True)
 
-        # aggregate the scores
+        # aggregate the scores for the estimated totals for following this episode
         this_ep = mdf.groupby(['user_nm', 'team_nm'])['ep_no'].agg('sum').reset_index(). \
                 sort_values(['ep_no'], ascending=False).rename(columns={'ep_no':'score'})
         this_ep['ep_no'] = ep_no
         progress = progress.append(this_ep)
 
-    fig = plt.figure()
+    # plot the result
+    imgdata = BytesIO()
     sns.lineplot(x='ep_no', y='score', hue='team_nm', data=progress)
-    plt.savefig(r"static\progress.png")
-    print('\n\n')
+    plt.savefig(imgdata, format='png')
+    imgdata.seek(0)
+    plot_url = Image.open(imgdata)
+    
+    return plot_url
 
 @app.context_processor
 def feed_layout():
@@ -191,8 +198,8 @@ def board():
     c.execute(query)   
     df = pd.DataFrame(c.fetchall())
 
-    # get chart
-    chart_progress(df)
+    # chart the progress to this episode
+    plot_url = chart_progress(df.copy())
 
     # Query for the episodes
     c.execute('Select MAX(ep_no) as max from Episode')
@@ -203,7 +210,7 @@ def board():
     leader_board = mdf.groupby(['user_nm', 'team_nm'])['ep_no'].agg('sum').reset_index(). \
         sort_values(['ep_no'], ascending=False).rename(columns={'ep_no':'score'})
     
-    return render_template('leaderboard.html', leader_board=leader_board)
+    return render_template('leaderboard.html', leader_board=leader_board, plot_url=plot_url)
 
 @app.route("/contestants")
 def contestants():
