@@ -9,6 +9,7 @@ matplotlib.use('Agg') # configure to webapp
 import matplotlib.pyplot as plt
 import sqlite3
 import datetime
+from username import User
 
 # try to update the db
 try:    
@@ -20,7 +21,7 @@ from io import BytesIO
 from PIL import Image
 
 # current user
-USERNM = "Janosity"
+USERNM = User()
 
 # connect flasky things
 app = Flask(__name__)
@@ -108,6 +109,8 @@ def blog():
     c, conn = get_db()    
     c.execute('SELECT user_nm FROM CompUser')
     results = c.fetchall()
+
+    print('\n\nUser name from Blog:', USERNM.name, '\n\n')
         
     form = BlogForm()
     if form.validate_on_submit():
@@ -118,7 +121,7 @@ def blog():
 
         # insert the blog message into the database
         c, conn = get_db()
-        query = 'insert into Blog (time_, user_nm, comp_nm, post) VALUES ("{}","{}", "{}", "{}")'.format(time_, USERNM, COMPNAME, content)
+        query = 'insert into Blog (time_, user_nm, comp_nm, post) VALUES ("{}","{}", "{}", "{}")'.format(time_, USERNM.name, COMPNAME, content)
         c.execute(query)
         conn.commit()        
 
@@ -133,7 +136,7 @@ def blog():
         ORDER BY time_ DESC")
     blogs = c.fetchall()
 
-    return render_template('blog.html', posts=blogs, form=form, user_nm=USERNM)
+    return render_template('blog.html', posts=blogs, form=form, user_nm=USERNM.name)
 
 @app.route("/blog/edit/<time>/<username>/<comp_name>", methods=['GET', 'POST'])
 def blog_detail_view_edit(time, username, comp_name):
@@ -289,9 +292,11 @@ def login():
     if form.validate_on_submit():
         # get the users choice
         choices = form.username.choices
-        USERNM = (choices[form.username.data][1])
+        USERNM.set_user_nm(choices[form.username.data][1])
+
+        print('submit', USERNM.name)
         
-        return redirect(url_for('blog'))
+        return redirect(url_for('board'))
 
     return render_template('login.html', form=form, error=error)
 
