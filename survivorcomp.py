@@ -13,6 +13,9 @@ import initialise
 from io import BytesIO
 from PIL import Image
 
+# current user
+USERNM = None
+
 # connect flasky things
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '5791628bb0b13ce0c676dfde280ba245'
@@ -273,28 +276,19 @@ def register():
 @app.route("/login", methods=['GET', 'POST'])
 def login():
     error = None
-    conn = sqlite3.connect('survivor.db')
-    conn.row_factory = dict_factory
-    c = conn.cursor() 
-    
+    c, conn = get_db()    
     c.execute('SELECT user_nm FROM CompUser')
-    result = c.fetchall()
-    users = [item['user_nm'] for item in result]
-
-    print('\n\n', users)
-
-    print('\n\n')
-
-    form = LoginForm()
-    content = form.username.data
-
-    if content in users:
-        flash(f'Logged in as {content}!', 'success')
-
-        print('success')
-    else:   
-        error = 'Invalid Credentials. Please try again.'
-        print(error)
+    results = c.fetchall()
+    users = [(results.index(item), item['user_nm']) for item in results]
+        
+    form = BlogForm()
+    form.username.choices = users
+    if form.validate_on_submit():
+        # get the users choice
+        choices = form.username.choices
+        USERNM = (choices[form.username.data][1])
+        
+        return redirect(url_for('blog'))
 
     return render_template('login.html', form=form, error=error)
 
