@@ -96,7 +96,6 @@ def chart_progress(df):
     plt.yticks(size=chart_size)
     plt.xticks(size=chart_size)
     plt.legend(prop=font_prop)
-    ax.set_frame_on(False)
     plt.tight_layout()
     return mpld3.fig_to_html(fig)
 
