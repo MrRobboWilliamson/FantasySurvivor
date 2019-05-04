@@ -20,6 +20,6 @@
 </div>
 <div class="content-section">
     <h3>Progress tracker</h3>
-    <img src="data:image/png;base64, {{ plot_url }} ">
+    {{ plot|safe }}
 </div>
 {% endblock content %}

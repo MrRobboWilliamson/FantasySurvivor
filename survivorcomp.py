@@ -3,14 +3,11 @@
 from flask import Flask, render_template, url_for, flash, redirect, request
 from forms import RegistrationForm, BlogForm, EditForm, DelForm, LoginForm
 import pandas as pd
-import seaborn as sns
-import matplotlib
-matplotlib.use('Agg') # configure to webapp 
-import matplotlib.pyplot as plt
+import seaborn as sns # configure to webapp 
+import matplotlib.pyplot as plt, mpld3
+import matplotlib.font_manager as font_manager
 import sqlite3
 import datetime
-from io import BytesIO
-from PIL import Image
 from username import User
 
 # catch initialise exceptions because it won't always work
@@ -83,14 +80,25 @@ def chart_progress(df):
         this_ep['ep_no'] = ep_no
         progress = progress.append(this_ep)
 
+    # plot properties
+    # Set the font properties (for use in legend)
+    chart_size = 14
+    label_size = 18
+    font_prop = font_manager.FontProperties(size=chart_size)   
+
     # plot the result
-    imgdata = BytesIO()
-    sns.lineplot(x='ep_no', y='score', hue='team_nm', data=progress)
-    plt.savefig(imgdata, format='png')
-    imgdata.seek(0)
-    plot_url = Image.open(imgdata)
-    
-    return plot_url
+    fig, ax = plt.subplots()
+    sns.set(style='whitegrid')
+    sns.lineplot(x='ep_no', y='score', hue='Team', data=progress.rename(columns={'team_nm': 'Team'}))
+    # sns.despine(left=True, bottom=True)
+    plt.xlabel('Episode', dict(size=label_size))
+    plt.ylabel('Potential scores', dict(size=label_size))
+    plt.yticks(size=chart_size)
+    plt.xticks(size=chart_size)
+    plt.legend(prop=font_prop)
+    ax.set_frame_on(False)
+    plt.tight_layout()
+    return mpld3.fig_to_html(fig)
 
 @app.context_processor
 def feed_layout():
@@ -199,7 +207,7 @@ def board():
     df = pd.DataFrame(c.fetchall())
 
     # chart the progress to this episode
-    plot_url = chart_progress(df.copy())
+    plot = chart_progress(df.copy())
 
     # Query for the episodes
     c.execute('Select MAX(ep_no) as max from Episode')
@@ -210,7 +218,7 @@ def board():
     leader_board = mdf.groupby(['user_nm', 'team_nm'])['ep_no'].agg('sum').reset_index(). \
         sort_values(['ep_no'], ascending=False).rename(columns={'ep_no':'score'})
     
-    return render_template('leaderboard.html', leader_board=leader_board, plot_url=plot_url)
+    return render_template('leaderboard.html', leader_board=leader_board, plot=plot)
 
 @app.route("/contestants")
 def contestants():
@@ -264,7 +272,7 @@ def register():
         c.execute("insert into CompUser values ( '" + new_user + "', '" + email + "')")
         conn.commit()
         
-        flash(f'Account created for {form.username.data}!', 'success')
+        flash('Account created for {}!'.format(form.username.data), 'success')
         return redirect(url_for('board'))
         
     return render_template('register.html', title='Register', form=form)
