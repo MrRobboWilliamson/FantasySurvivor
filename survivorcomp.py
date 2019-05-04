@@ -9,12 +9,18 @@ matplotlib.use('Agg') # configure to webapp
 import matplotlib.pyplot as plt
 import sqlite3
 import datetime
-import initialise
 from io import BytesIO
 from PIL import Image
+from username import User
 
-# current user
-USERNM = None
+# catch initialise exceptions because it won't always work
+try:    
+    import initialise
+except Exception as e:
+    print('InitError: {}'.format(e))
+
+# initialise user object
+USERNM = User()
 
 # connect flasky things
 app = Flask(__name__)
@@ -98,24 +104,15 @@ def feed_layout():
 
 @app.route("/blog", methods=['GET', 'POST'])
 def blog():
-    # connect to the db and get the users
-    c, conn = get_db()    
-    c.execute('SELECT user_nm FROM CompUser')
-    results = c.fetchall()
-    users = [(results.index(item), item['user_nm']) for item in results]
-        
     form = BlogForm()
-    form.username.choices = users
     if form.validate_on_submit():
         # get the users choice
-        choices = form.username.choices
-        user = (choices[form.username.data][1])
         time_ = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
         content = form.content.data
 
         # insert the blog message into the database
         c, conn = get_db()
-        query = 'insert into Blog (time_, user_nm, comp_nm, post) VALUES ("{}","{}", "{}", "{}")'.format(time_, user, COMPNAME, content)
+        query = 'insert into Blog (time_, user_nm, comp_nm, post) VALUES ("{}","{}", "{}", "{}")'.format(time_, USERNM.name, COMPNAME, content)
         c.execute(query)
         conn.commit()        
 
@@ -130,7 +127,7 @@ def blog():
         ORDER BY time_ DESC")
     blogs = c.fetchall()
 
-    return render_template('blog.html', posts=blogs, form=form)
+    return render_template('blog.html', posts=blogs, form=form, user_nm=USERNM.name)
 
 @app.route("/blog/edit/<time>/<username>/<comp_name>", methods=['GET', 'POST'])
 def blog_detail_view_edit(time, username, comp_name):
@@ -286,7 +283,7 @@ def login():
     if form.validate_on_submit():
         # get the users choice
         choices = form.username.choices
-        USERNM = (choices[form.username.data][1])
+        USERNM.set_user_nm((choices[form.username.data][1]))
         
         return redirect(url_for('contestants'))
 
