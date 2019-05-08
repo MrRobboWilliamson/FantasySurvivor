@@ -297,7 +297,7 @@ def login():
     return render_template('login.html', form=form, error=error)
 
 #My Account 
-@app.route("/<username>", methods=['GET', 'POST'])
+@app.route("/myaccount", methods=['GET', 'POST'])
 def myaccount():
     c, conn = get_db()    
     c.execute('SELECT (*) FROM Team T, Based_on B, Contestant C\
@@ -305,11 +305,11 @@ def myaccount():
                group by user_nm\
                having user_nm = {USERNM.name}')
     results = c.fetchall()
-    users = [(results.index(item), item['user_nm']) for item in results]
+    # contestants = [(results.index(item), item['contestant_nm']) for item in results]
 
-    print('\n', users, '\n')
+    print('\n', results, '\n')
 
-    return render_template('myaccount.html', form=form, error=error)
+    return render_template('myaccount.html', form=form, error=error, my_team=results)
 
 
 if __name__ == '__main__':
