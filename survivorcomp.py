@@ -3,7 +3,7 @@
 from flask import Flask, render_template, url_for, flash, redirect, request
 from forms import RegistrationForm, BlogForm, EditForm, DelForm, LoginForm
 import pandas as pd
-import seaborn as sns # configure to webapp 
+import seaborn as sns # configure to webapp
 import matplotlib.pyplot as plt, mpld3
 import matplotlib.font_manager as font_manager
 import sqlite3
@@ -290,11 +290,26 @@ def login():
     if form.validate_on_submit():
         # get the users choice
         choices = form.username.choices
-        USERNM.set_user_nm((choices[form.username.data][1]))
+        USERNM.name = USERNM.set_user_nm((choices[form.username.data][1]))
         
-        return redirect(url_for('contestants'))
+        return redirect(url_for('myaccount'))
 
     return render_template('login.html', form=form, error=error)
+
+#My Account 
+@app.route("/<username>", methods=['GET', 'POST'])
+def myaccount():
+    c, conn = get_db()    
+    c.execute('SELECT (*) FROM Team T, Based_on B, Contestant C\
+               where B.contestant_id = C.contestant_id and T.team_nm = B.team_nm\
+               group by user_nm\
+               having user_nm = {USERNM.name}')
+    results = c.fetchall()
+    users = [(results.index(item), item['user_nm']) for item in results]
+
+    print('\n', users, '\n')
+
+    return render_template('myaccount.html', form=form, error=error)
 
 
 if __name__ == '__main__':
