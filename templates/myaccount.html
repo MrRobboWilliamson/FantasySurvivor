@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+{% block content %}
+<h2>These are your contestants</h2>
+<div class="content-section">
+<table style="width:100%">
+    <tr>
+        <th>Contestant</th>
+        <th>Age</th>
+        <th>Home town</th>
+    </tr>
+   {% for user in users %}
+      <tr>
+        <td>{{ user.name }}</td>
+        <td>{{ user.age }}</td>
+        <td>{{ user.origin_town }}</td>
+    </tr>
+{% endfor %}
+</table>
+</div>
+{% endblock content %}
