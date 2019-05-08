@@ -300,16 +300,15 @@ def login():
 @app.route("/myaccount", methods=['GET', 'POST'])
 def myaccount():
     c, conn = get_db()    
-    c.execute('SELECT (*) FROM Team T, Based_on B, Contestant C\
+    c.execute('SELECT user_nm FROM Team T, Based_on B, Contestant C\
                where B.contestant_id = C.contestant_id and T.team_nm = B.team_nm\
-               group by user_nm\
-               having user_nm = {USERNM.name}')
+               group by user_nm')
     results = c.fetchall()
     # contestants = [(results.index(item), item['contestant_nm']) for item in results]
 
     print('\n', results, '\n')
 
-    return render_template('myaccount.html', form=form, error=error, my_team=results)
+    return render_template('myaccount.html', my_team=results)
 
 
 if __name__ == '__main__':
