@@ -1,17 +1,13 @@
 ### Example inspired by Tutorial at https://www.youtube.com/watch?v=MwZwr5Tvyxo&list=PL-osiE80TeTs4UjLw5MM6OjgkjFeUxCYH
 ### However the actual example uses sqlalchemy which uses Object Relational Mapper, which are not covered in this course. I have instead used natural sQL queries for this demo. 
-from flask import Flask, render_template, url_for, flash, redirect
-from forms import RegistrationForm, BlogForm
 import pandas as pd
 import numpy as np
 import sqlite3
 import scrape
-import datetime
+# import datetime
 import random
 
 conn = sqlite3.connect('survivor.db')
-app = Flask(__name__)
-app.config['SECRET_KEY'] = '5791628bb0b13ce0c676dfde280ba245'
 
 #Turn the results from the database into a dictionary
 def dict_factory(cursor, row):
@@ -39,15 +35,16 @@ target_url = ROOT_URL + latest
 tclass = 'wikitable sortable'
 
 # get the contestants
+voted_out = 'Main game'
 cons = scrape.WikiTable(url=target_url,
                             table_class=tclass,
-                            columns=['Contestant', 'Voted out']).df
+                            columns=['Contestant', voted_out]).df.rename(columns={voted_out:'Voted out'})
 
 # strip the text
 for col in cons.columns:
     cons.loc[:, col] = cons[col].str.strip()
 
-cons['Voted out'] = cons['Voted out'].str.split('Day', expand=True)[0].str[:-2].str.strip()
+cons['Voted out'] = cons['Voted out'].str.split('voted', expand=True)[0].str.strip().str[:-2]
 cons['Voted out'] = cons['Voted out'].apply(lambda x: int(x) if len(x)>0 else None)
 cons = cons.sort_values(['Voted out'])
 
