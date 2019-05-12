@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block content %}
-<h2>These are your contestants</h2>
+<h2>These are your team members/h2>
 <div class="content-section">
 <table style="width:100%">
     <tr>
@@ -8,11 +8,11 @@
         <th>Age</th>
         <th>Home town</th>
     </tr>
-   {% for choice in my_team %}
+   {% for result in results %}
       <tr>
-        <td>{{ choice.name }}</td>
-        <td>{{ choice.age }}</td>
-        <td>{{ choice.origin_town }}</td>
+        <td>{{ result.name }}</td>
+        <td>{{ result.age }}</td>
+        <td>{{ result.origin_town }}</td>
     </tr>
 {% endfor %}
 </table>
