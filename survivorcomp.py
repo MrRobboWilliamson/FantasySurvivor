@@ -11,10 +11,11 @@ import datetime
 from username import User
 
 # catch initialise exceptions because it won't always work
-try:    
+try:
     import initialise
 except Exception as e:
-    print('InitError: {}'.format(e))
+    print('\n\n')
+    print('Scraper not working: {}\n\n'.format(e['line']))
 
 # initialise user object
 USERNM = User()
@@ -121,7 +122,7 @@ def blog():
         c, conn = get_db()
         query = 'insert into Blog (time_, user_nm, comp_nm, post) VALUES ("{}","{}", "{}", "{}")'.format(time_, USERNM.name, COMPNAME, content)
         c.execute(query)
-        conn.commit()        
+        conn.commit()   
 
         return redirect(url_for('blog'))
     
