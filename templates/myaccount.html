@@ -8,11 +8,11 @@
         <th>Age</th>
         <th>Home town</th>
     </tr>
-   {% for result in results %}
+   {% for choice in my_team %}
       <tr>
-        <td>{{ result.name }}</td>
-        <td>{{ result.age }}</td>
-        <td>{{ result.origin_town }}</td>
+        <td>{{ choice.name }}</td>
+        <td>{{ choice.age }}</td>
+        <td>{{ choice.origin_town }}</td>
     </tr>
 {% endfor %}
 </table>
