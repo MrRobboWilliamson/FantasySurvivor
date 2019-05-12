@@ -29,11 +29,23 @@
             <div class="navbar-nav mr-auto">
               <a class="nav-item nav-link" href="{{ url_for('blog') }}">Blog</a>
               <a class="nav-item nav-link" href="{{ url_for('contestants') }}">Survivor Contestants</a>
+              {% if user.name %}
+              {% if user.status == "passive" %}
+              <a class="nav-item nav-link" href="{{ url_for('contestants') }}">Create Team</a>
+              {% elif user.status == "participating" %}
+              <a class="nav-item nav-link" href="{{ url_for('contestants') }}">My Team</a>
+              {% endif %}
+              {% endif %}
               
             </div>
             <!-- Navbar Right Side -->
             <div class="navbar-nav">
-                <a class="nav-item nav-link" href="{{ url_for('login') }}">Login</a>
+              <!--show the create team if logged in and not a participating user-->
+              {% if user.name == None %}
+              <a class="nav-item nav-link" href="{{ url_for('login') }}">Login</a>
+              {% else %}
+              <a class="nav-item nav-link" href="{{ url_for('logout') }}">Logout</a>
+              {% endif %}
               <a class="nav-item nav-link" href="{{ url_for('register') }}">New User</a>
             </div>
           </div>

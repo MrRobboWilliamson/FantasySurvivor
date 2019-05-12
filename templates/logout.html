@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="content-section">
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        <h2>Are you sure?</h2>
+        <div class="form-group">
+            {{ form.logout_btn(class="btn btn-outline-info") }}
+            {{ form.cancel_btn(class="btn btn-outline-info") }}
+        </div>
+    </form>
+</div>
+{% endblock content %}

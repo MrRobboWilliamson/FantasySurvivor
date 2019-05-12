@@ -1,7 +1,7 @@
 ### Example inspired by Tutorial at https://www.youtube.com/watch?v=MwZwr5Tvyxo&list=PL-osiE80TeTs4UjLw5MM6OjgkjFeUxCYH
 ### However the actual example uses sqlalchemy which uses Object Relational Mapper, which are not covered in this course. I have instead used natural sQL queries for this demo. 
 from flask import Flask, render_template, url_for, flash, redirect, request
-from forms import RegistrationForm, BlogForm, EditForm, DelForm, LoginForm
+from forms import RegistrationForm, BlogForm, EditForm, DelForm, LoginForm, LogoutForm
 import pandas as pd
 import seaborn as sns # configure to webapp 
 import matplotlib.pyplot as plt, mpld3
@@ -100,6 +100,31 @@ def chart_progress(df):
     plt.tight_layout()
     return mpld3.fig_to_html(fig)
 
+def find_superstars():
+    '''
+    This function will perform a division query to see if there are any
+    contestants that have been picked by all users
+    '''
+
+    # connect to the database
+    c, conn = get_db()
+    
+    # get all of the teams and contestants
+    query = \
+        "SELECT contestant_id FROM Contestant \
+        WHERE NOT EXISTS ( \
+            SELECT team_nm FROM Team) \
+            EXCEPT \
+            SELECT team_nm FROM Based_on \
+            WHERE Contestant.contestant_id=Based_on.contestant_id \
+            )"
+
+    c.execute(query)
+    super_id = c.fetchall()
+
+    print("\n\nSuper starts:\n")
+    print(super_id, "\n\n")
+
 @app.context_processor
 def feed_layout():
     c, conn = get_db()
@@ -108,7 +133,7 @@ def feed_layout():
         Where ep_no is not Null \
         order by ep_no")
     out_cons = c.fetchall()
-    return dict(out_cons=out_cons)
+    return dict(out_cons=out_cons, user=USERNM)
 
 @app.route("/blog", methods=['GET', 'POST'])
 def blog():
@@ -273,7 +298,7 @@ def register():
         conn.commit()
         
         flash('Account created for {}!'.format(form.username.data), 'success')
-        return redirect(url_for('board'))
+        return redirect(url_for('login'))
         
     return render_template('register.html', title='Register', form=form)
 
@@ -292,10 +317,41 @@ def login():
         # get the users choice
         choices = form.username.choices
         USERNM.set_user_nm((choices[form.username.data][1]))
+
+        # update the layout form
+        feed_layout()
         
         return redirect(url_for('contestants'))
 
     return render_template('login.html', form=form, error=error)
+
+#Add create team feature
+# if the user is in the CompUser table and not in the Participating user table
+# then this feature is available otherwise it is replace with my team
+@app.route("/logout", methods=['GET', 'POST'])
+def logout():
+    # get the form with the buttons
+    form = LogoutForm()
+    if form.validate_on_submit():
+        if 'logout_btn' in request.form:
+            # print('Delete request')
+            # delete the post
+            USERNM.logout()
+            return redirect(url_for('blog'))
+        elif 'cancel_btn' in request.form:
+            print('Cancel request')
+
+            # if cancelled, then just redirect
+            return redirect(url_for('blog'))
+        else:
+            print("That didn't work!")
+
+    return render_template('logout.html', form=form)
+
+
+
+
+
 
 
 if __name__ == '__main__':

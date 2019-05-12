@@ -31,3 +31,16 @@ class DelForm(FlaskForm):
     # content = TextAreaField('Edit message', validators=[DataRequired()])
     delete_btn = SubmitField('Delete')
     cancel_btn = SubmitField('Cancel')
+
+class CreateTeam(FlaskForm):
+    c1 = SelectField('Contestant 1', choices=[], coerce=int)
+    c2 = SelectField('Contestant 2', choices=[], coerce=int)
+    c3 = SelectField('Contestant 3', choices=[], coerce=int)
+    c4 = SelectField('Contestant 4', choices=[], coerce=int)
+    submit = SubmitField('Submit')
+
+# logout form is just a button
+class LogoutForm(FlaskForm):
+    # content = TextAreaField('Edit message', validators=[DataRequired()])
+    logout_btn = SubmitField('Logout')
+    cancel_btn = SubmitField('Cancel')
