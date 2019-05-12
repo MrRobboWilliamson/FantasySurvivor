@@ -8,11 +8,11 @@
         <th>Age</th>
         <th>Home town</th>
     </tr>
-   {% for user in results %}
+   {% for result in results %}
       <tr>
-        <td>{{ user.name }}</td>
-        <td>{{ user.age }}</td>
-        <td>{{ user.origin_town }}</td>
+        <td>{{ result.name }}</td>
+        <td>{{ result.age }}</td>
+        <td>{{ result.origin_town }}</td>
     </tr>
 {% endfor %}
 </table>
