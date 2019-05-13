@@ -3,7 +3,7 @@
 from flask import Flask, render_template, url_for, flash, redirect, request
 from forms import RegistrationForm, BlogForm, EditForm, DelForm, LoginForm
 import pandas as pd
-import seaborn as sns # configure to webapp 
+import seaborn as sns # configure to webapp
 import matplotlib.pyplot as plt, mpld3
 import matplotlib.font_manager as font_manager
 import sqlite3
@@ -11,7 +11,7 @@ import datetime
 from username import User
 
 # catch initialise exceptions because it won't always work
-try:    
+try:
     import initialise
 except Exception as e:
     print('InitError: {}'.format(e))
@@ -35,7 +35,7 @@ def get_db():
     conn = sqlite3.connect('survivor.db')
     conn.row_factory = dict_factory
     c = conn.cursor()
-    
+
     # enforce integrity constraints 
     c.execute("PRAGMA foreign_keys=ON;")
     return c, conn
@@ -58,7 +58,7 @@ def chart_progress(df):
         where ep_no is not null \
         order by ep_no')
     contestants = pd.DataFrame(c.fetchall())
-    
+
     # zero out the ep_no in the teams df
     df['ep_no'] = pd.np.nan
     progress = pd.DataFrame()
@@ -84,7 +84,7 @@ def chart_progress(df):
     # Set the font properties (for use in legend)
     chart_size = 14
     label_size = 18
-    font_prop = font_manager.FontProperties(size=chart_size)   
+    font_prop = font_manager.FontProperties(size=chart_size)
 
     # plot the result
     fig, ax = plt.subplots()
@@ -121,10 +121,10 @@ def blog():
         c, conn = get_db()
         query = 'insert into Blog (time_, user_nm, comp_nm, post) VALUES ("{}","{}", "{}", "{}")'.format(time_, USERNM.name, COMPNAME, content)
         c.execute(query)
-        conn.commit()        
+        conn.commit()
 
         return redirect(url_for('blog'))
-    
+
     conn = sqlite3.connect('survivor.db')
 
     #Display all blogs from the 'blogs' table
@@ -141,7 +141,7 @@ def blog_detail_view_edit(time, username, comp_name):
     # conv
     c, conn = get_db()
     time = time.replace('-', '/')
-    c.execute("SELECT * FROM Blog where time_=? and user_nm=? and comp_nm=?", [time, username, comp_name]) 
+    c.execute("SELECT * FROM Blog where time_=? and user_nm=? and comp_nm=?", [time, username, comp_name])
     blog = c.fetchone()
     if blog:
         # Render a detailForm and show it.
@@ -202,7 +202,7 @@ def board():
     query = 'select p.user_nm, t.team_nm, c.name, c.ep_no\
         FROM ParticipatingUser p, Team t, Based_on b, Contestant c\
         WHERE t.user_nm=p.user_nm and b.team_nm=t.team_nm and b.contestant_id=c.contestant_id'
-    c.execute(query)   
+    c.execute(query)
     df = pd.DataFrame(c.fetchall())
 
     # chart the progress to this episode
@@ -216,18 +216,18 @@ def board():
     # aggregate the scores
     leader_board = mdf.groupby(['user_nm', 'team_nm'])['ep_no'].agg('sum').reset_index(). \
         sort_values(['ep_no'], ascending=False).rename(columns={'ep_no':'score'})
-    
+
     return render_template('leaderboard.html', leader_board=leader_board, plot=plot)
 
 @app.route("/contestants")
 def contestants():
     c, conn = get_db()
-    
+
     # get the number of times that each contestant has been picked
     c.execute("SELECT contestant_id, count(*) as num_picks \
                 FROM based_on \
                 GROUP BY contestant_id")
-    
+
     # put into a dataframe for joining
     picks = pd.DataFrame(data=c.fetchall())
 
@@ -240,18 +240,54 @@ def contestants():
     # join them and fill the blanks with zeros
     contestants = ctemp.merge(right=picks, on=['contestant_id'], how='left')
     contestants['num_picks'] = contestants['num_picks'].fillna(0)
-    
+
     # calculate popularity as a percentage of all picks and sort for presentation
     tot_picks = contestants['num_picks'].sum()
     contestants['popular'] = (contestants['num_picks'] / float(tot_picks)).apply(lambda x: '{:.0%}'.format(x))
     contestants = contestants.sort_values(['num_picks', 'name'], ascending=[False, True])
-    
+
     print('\n', contestants, '\n')
 
     # convert back dictionary 
     contestants = contestants.to_dict('records')
 
     return render_template('contestants.html', contestants=contestants)
+
+
+@app.route("/create-team", methods=['GET', 'POST'])
+def create_team():
+    c, conn = get_db()
+
+    f = request.form
+    pre_sql = []
+    team_name = f.get('team_name', None)
+    if team_name:
+        for i,k in f.items():
+            i = str(i)
+            if 'checkboxes-' not in i:
+                continue
+
+            pre_sql.append(
+                "('{}',{})".format(team_name, str(k))
+            )
+    if len(pre_sql) == 4 and team_name:
+        # TODO: what is user_nm and comp_nm? 
+        c.execute('INSERT INTO Team VALUES (?,?,?)', [team_name, 'BigJase', 'Milton Crew'])
+        conn.commit()
+        c, conn = get_db()
+        c.execute('INSERT INTO Based_on (team_nm, contestant_id) VALUES ' + ','.join(pre_sql))
+        conn.commit()
+        return redirect(url_for('board'))
+
+    # select the contestant details and put into data frame
+    c.execute("SELECT * FROM contestant")
+    ctemp = pd.DataFrame(data=c.fetchall())
+    # print('\n', ctemp, '\n')
+
+    # convert back dictionary
+    contestants = ctemp.to_dict('records')
+
+    return render_template('create_team.html', contestants=contestants)
 
 # Add User
 # sets the html file to be displayed - assigns this method to that page
@@ -270,28 +306,28 @@ def register():
         c = conn.cursor()
         c.execute("insert into CompUser values ( '" + new_user + "', '" + email + "')")
         conn.commit()
-        
+
         flash('Account created for {}!'.format(form.username.data), 'success')
         return redirect(url_for('board'))
-        
+
     return render_template('register.html', title='Register', form=form)
 
 #Add Login feature
 @app.route("/login", methods=['GET', 'POST'])
 def login():
     error = None
-    c, conn = get_db()    
+    c, conn = get_db()
     c.execute('SELECT user_nm FROM CompUser')
     results = c.fetchall()
     users = [(results.index(item), item['user_nm']) for item in results]
-        
+
     form = LoginForm()
     form.username.choices = users
     if form.validate_on_submit():
         # get the users choice
         choices = form.username.choices
         USERNM.set_user_nm((choices[form.username.data][1]))
-        
+
         return redirect(url_for('contestants'))
 
     return render_template('login.html', form=form, error=error)
