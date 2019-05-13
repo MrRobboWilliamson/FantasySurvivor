@@ -301,11 +301,13 @@ def login():
 @app.route("/myaccount", methods=['GET', 'POST'])
 def myaccount():
     c, conn = get_db()    
-    c.execute('SELECT user_nm FROM Team')
+    c.execute("SELECT * FROM team WHERE user_nm='{0}'".format(USERNM.name))
     results = c.fetchall()
     # contestants = [(results.index(item), item['contestant_nm']) for item in results]
 
     print('\n', results, '\n')
+
+    #results = results.to_dict('records')
 
     return render_template('myaccount.html', results=results)
 
