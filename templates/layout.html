@@ -31,7 +31,7 @@
               <a class="nav-item nav-link" href="{{ url_for('contestants') }}">Survivor Contestants</a>
               {% if user.name %}
               {% if user.status == "passive" %}
-              <a class="nav-item nav-link" href="{{ url_for('contestants') }}">Create Team</a>
+              <a class="nav-item nav-link" href="{{ url_for('create_team') }}">Create Team</a>
               {% elif user.status == "participating" %}
               <a class="nav-item nav-link" href="{{ url_for('contestants') }}">My Team</a>
               {% endif %}

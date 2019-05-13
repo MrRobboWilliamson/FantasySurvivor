@@ -1,7 +1,7 @@
 ### Example inspired by Tutorial at https://www.youtube.com/watch?v=MwZwr5Tvyxo&list=PL-osiE80TeTs4UjLw5MM6OjgkjFeUxCYH
 ### However the actual example uses sqlalchemy which uses Object Relational Mapper, which are not covered in this course. I have instead used natural sQL queries for this demo. 
 from flask import Flask, render_template, url_for, flash, redirect, request
-from forms import RegistrationForm, BlogForm, EditForm, DelForm, LoginForm, LogoutForm
+from forms import RegistrationForm, BlogForm, EditForm, DelForm, LoginForm, LogoutForm, CreateTeam
 import pandas as pd
 import seaborn as sns # configure to webapp 
 import matplotlib.pyplot as plt, mpld3
@@ -15,7 +15,7 @@ try:
     import initialise
 except Exception as e:
     print('\n\n')
-    print('Scraper not working: {}\n\n'.format(e['line']))
+    print('Scraper not working: {}\n\n'.format(e))
 
 # initialise user object
 USERNM = User()
@@ -124,6 +124,20 @@ def find_superstars():
 
     print("\n\nSuper starts:\n")
     print(super_id, "\n\n")
+
+def apply_status(user):
+    '''
+    Checks the status by seeing if the user is in participating or not
+    '''
+    c, conn = get_db()
+    c.execute("select user_nm from ParticipatingUser")
+    result = c.fetchall()
+    pusers = [item['user_nm'] for item in result]
+
+    if user in pusers:
+        USERNM.set_status('participating')
+    else:
+        USERNM.set_status('passive')
 
 @app.context_processor
 def feed_layout():
@@ -272,7 +286,8 @@ def contestants():
     contestants['popular'] = (contestants['num_picks'] / float(tot_picks)).apply(lambda x: '{:.0%}'.format(x))
     contestants = contestants.sort_values(['num_picks', 'name'], ascending=[False, True])
     
-    print('\n', contestants, '\n')
+    # print('\n', contestants, '\n')
+    find_superstars()
 
     # convert back dictionary 
     contestants = contestants.to_dict('records')
@@ -319,6 +334,7 @@ def login():
         USERNM.set_user_nm((choices[form.username.data][1]))
 
         # update the layout form
+        apply_status(USERNM.name)
         feed_layout()
         
         return redirect(url_for('contestants'))
@@ -337,22 +353,69 @@ def logout():
             # print('Delete request')
             # delete the post
             USERNM.logout()
-            return redirect(url_for('blog'))
         elif 'cancel_btn' in request.form:
-            print('Cancel request')
-
-            # if cancelled, then just redirect
-            return redirect(url_for('blog'))
+            pass
+            # if cancelled, then just redirect            
         else:
             print("That didn't work!")
 
+        return redirect(url_for('board'))
+
     return render_template('logout.html', form=form)
 
+# def check_unique(team_members, form):
+#     if len(team_members) > len(list(set(team_members))):
+#         form
 
+@app.route("/create_team", methods=['GET', 'POST'])
+def create_team():
+    error = None
+    
+    c, conn = get_db()    
+    c.execute('SELECT contestant_id, name FROM Contestant')
+    results = c.fetchall()
+    contestants = [(item['contestant_id'], item['name']) for item in results]
+        
+    form = CreateTeam()
+    form.c1.choices = contestants
+    form.c2.choices = contestants
+    form.c3.choices = contestants
+    form.c4.choices = contestants
+    if form.validate_on_submit():
+        team_members = [form.c1.data, form.c2.data, form.c3.data, form.c4.data] 
+        try:
+            form.check_unique(team_members)
+        except Exception as e:
+            flash('Something went wrong: {}'.format(e))
+            print(e)
+            return redirect(url_for('contestants'))
+        
+        # add this user to the ParticipatingUser table
+        c, conn = get_db()
+        c.execute('INSERT INTO ParticipatingUser (user_nm) \
+            VALUES ("{}")'.format(USERNM.name))
 
+        # add the team name to the db
+        c.execute('INSERT INTO Team (team_nm, user_nm, comp_nm) \
+            VALUES ("{}", "{}", "{}")'.format(form.team_nm.data, USERNM.name, COMPNAME))
 
+        # for tm in team_members:
+        for tm in team_members:
+            c.execute('INSERT INTO Based_on (team_nm, contestant_id)\
+                VALUES ("{}", {})'.format(form.team_nm.data, tm))
+        
+        # commit all of the changes
+        conn.commit()
+        
+        # update the user status to participating
+        USERNM.set_status('participating')
+        
+        # update the user details for the layout
+        feed_layout()        
+        
+        return redirect(url_for('contestants'))
 
-
+    return render_template('create_team.html', form=form, error=error)
 
 if __name__ == '__main__':
     app.run(debug=True)
