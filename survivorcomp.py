@@ -319,17 +319,20 @@ def login():
     c, conn = get_db()
     c.execute('SELECT user_nm FROM CompUser')
     results = c.fetchall()
-    users = [(results.index(item), item['user_nm']) for item in results]
+    users = [item['user_nm'] for item in results]
+
+    print('\n',users,'\n')
 
     form = LoginForm()
     form.username.choices = users
     if form.validate_on_submit():
         # get the users choice
-        choices = form.username.choices
-        USERNM.set_user_nm((choices[form.username.data][1]))
-
-        return redirect(url_for('contestants'))
-
+        for i in users:
+            if form.username.choices != i:
+                continue
+            else:
+                #USERNM.set_user_nm((choices[form.username.data][1]))
+                return redirect(url_for('myaccount'))
     return render_template('login.html', form=form, error=error)
 
 #Add myaacount feature

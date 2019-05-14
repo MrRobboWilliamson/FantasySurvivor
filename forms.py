@@ -16,7 +16,7 @@ class BlogForm(FlaskForm):
     submit = SubmitField('Submit')
 
 class LoginForm(FlaskForm):
-    username = SelectField('Username', choices=[], coerce=int)
+    username = StringField('Username', validators=[DataRequired(), Length(min=2, max=20)])
     submit = SubmitField('Submit')
 
 # class LoginForm(FlaskForm):
