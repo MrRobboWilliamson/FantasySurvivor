@@ -325,6 +325,7 @@ def login():
 
     form = LoginForm()
     user = form.username.data
+    USERNM.name = form.username.data
     if form.validate_on_submit():
         # get the users choice
         if user not in users:
@@ -341,6 +342,7 @@ def myaccount():
     c.execute('SELECT user_nm FROM Team where user_nm={0}'.format(USERNM.name))
     results = c.fetchall()
     users = [(results.index(item), item['user_nm']) for item in results]
+    print(USERNM.name)
     print('\n', users, '\n')
 
     # convert back dictionary 
