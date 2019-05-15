@@ -107,6 +107,7 @@ def feed_layout():
         Where ep_no is not Null \
         order by ep_no")
     out_cons = c.fetchall()
+    
     return dict(out_cons=out_cons)
 
 @app.route("/blog", methods=['GET', 'POST'])
@@ -312,6 +313,17 @@ def register():
 
     return render_template('register.html', title='Register', form=form)
 
+def check_status(user):
+
+    c, conn = get_db()
+    c.execute('SELECT user_nm FROM ParticipatingUser') 
+    results = c.fetchall()
+    
+    if user in results:
+        return 'Not Passive'
+    
+    return 'Passive'
+
 #Add Login feature
 @app.route("/login", methods=['GET', 'POST'])
 def login():
@@ -324,14 +336,17 @@ def login():
     print('\n',users,'\n')
 
     form = LoginForm()
-    user = form.username.data
-    USERNM.name = form.username.data
     if form.validate_on_submit():
         # get the users choice
-        if user not in users:
+        if form.username.data not in users:
             flash('User not found!')
         else:
             #USERNM.set_user_nm((choices[form.username.data][1]))
+            USERNM.set_user_nm(form.username.data)
+            USERNM.set_status(check_status(form.username.data))
+            feed_layout()
+
+
             return redirect(url_for('myaccount'))
     return render_template('login.html', form=form, error=error)
 
@@ -339,17 +354,26 @@ def login():
 @app.route("/myaccount", methods=['GET', 'POST'])
 def myaccount():
     c, conn = get_db()
-    c.execute('SELECT user_nm FROM Team where user_nm={0}'.format(USERNM.name))
-    results = c.fetchall()
-    users = [(results.index(item), item['user_nm']) for item in results]
     print(USERNM.name)
-    print('\n', users, '\n')
+    print("{0}".format(USERNM.name))
+    c.execute('SELECT name, age, origin_town  \
+        FROM Team t, Contestant c, Based_on b \
+        Where b.team_nm = t.team_nm AND \
+        b.contestant_id = c.contestant_id AND user_nm = "{0}"'.format(USERNM.name))
+    results = c.fetchall()
+    print([item for item in results])
+    #users = [(results.index(item), item['name']) for item in results]
+    print(USERNM.name)
+    print(results)
+    
 
     # convert back dictionary 
-    users = users.to_dict('records')
+    #results = results.to_dict('records')
+    print(results)
 
-    return render_template('myaccount.html', results=users)
+    return render_template('myaccount.html', results=results)
 
+# @app.route("/logout")
 
 if __name__ == '__main__':
     app.run(debug=True)

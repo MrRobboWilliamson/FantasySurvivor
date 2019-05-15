@@ -33,7 +33,8 @@
             </div>
             <!-- Navbar Right Side -->
             <div class="navbar-nav">
-                <a class="nav-item nav-link" href="{{ url_for('login') }}">Login</a>
+             
+              <a class="nav-item nav-link" href="{{ url_for('login') }}">Login</a>
               <a class="nav-item nav-link" href="{{ url_for('register') }}">New User</a>
             </div>
           </div>
@@ -65,7 +66,7 @@
                   <th>Contestant</th>
                   <th>Episode out</th>
                 </tr>
-                  {% for contestant in out_cons%}
+                  {% for contestant in out_cons %}
                     <tr>
                       <td>{{ contestant['name'] }}</td>
                       <td>{{ contestant['ep_no'] }}</td>
