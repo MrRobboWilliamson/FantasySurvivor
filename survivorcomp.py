@@ -324,15 +324,14 @@ def login():
     print('\n',users,'\n')
 
     form = LoginForm()
-    form.username.choices = users
+    user = form.username.data
     if form.validate_on_submit():
         # get the users choice
-        for i in users:
-            if form.username.choices != i:
-                continue
-            else:
-                #USERNM.set_user_nm((choices[form.username.data][1]))
-                return redirect(url_for('myaccount'))
+        if user not in users:
+            flash('User not found!')
+        else:
+            #USERNM.set_user_nm((choices[form.username.data][1]))
+            return redirect(url_for('myaccount'))
     return render_template('login.html', form=form, error=error)
 
 #Add myaacount feature
