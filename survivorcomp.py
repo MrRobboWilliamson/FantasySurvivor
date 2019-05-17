@@ -370,11 +370,33 @@ def myaccount():
     form = DelForm()
     if form.validate_on_submit():
         print("pressed")
-        return redirect(url_for('home'))
+        return redirect(url_for('myaccount_delete'))
 
     return render_template('myaccount.html', results=results, form = form)
 
 # @app.route("/logout")
+@app.route("/myaccount/delete", methods=['GET', 'POST'])
+def myaccount_delete():
+    # get the form with the buttons
+    form = DelForm()
+    if form.validate_on_submit():
+        if 'delete_btn' in request.form:
+            print('Delete request')
+            # delete the post
+            c, conn = get_db()
+            c.execute('DELETE FROM ParticipatingUser \
+                WHERE user_nm="{0}"'.format(USERNM.name))
+            conn.commit()
+            return redirect(url_for('login'))
+        elif 'cancel_btn' in request.form:
+            print('Cancel request')
+
+            # if cancelled, then just redirect
+            return redirect(url_for('myaccount'))
+        else:
+            print("That didn't work!")
+
+    return render_template('delete.html', form=form)
 
 if __name__ == '__main__':
     app.run(debug=True)

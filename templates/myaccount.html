@@ -17,7 +17,13 @@
 {% endfor %}
 </table>
 </div>
+<form method="POST" action="">
+    {{ form.hidden_tag() }}
+    <fieldset class="form-group">
+        <legend class="border-bottom mb-4">Delete</legend>
 <div class="form-group">
     {{ form.delete_btn(class="btn btn-outline-info") }}
 </div>
+</fieldset>
+</form>
 {% endblock content %}
