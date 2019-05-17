@@ -356,6 +356,7 @@ def myaccount():
     c, conn = get_db()
     print(USERNM.name)
     print("{0}".format(USERNM.name))
+    
     c.execute('SELECT name, age, origin_town  \
         FROM Team t, Contestant c, Based_on b \
         Where b.team_nm = t.team_nm AND \
@@ -365,13 +366,13 @@ def myaccount():
     #users = [(results.index(item), item['name']) for item in results]
     print(USERNM.name)
     print(results)
-    
 
-    # convert back dictionary 
-    #results = results.to_dict('records')
-    print(results)
+    form = DelForm()
+    if form.validate_on_submit():
+        print("pressed")
+        return redirect(url_for('home'))
 
-    return render_template('myaccount.html', results=results)
+    return render_template('myaccount.html', results=results, form = form)
 
 # @app.route("/logout")
 
