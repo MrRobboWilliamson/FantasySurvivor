@@ -97,7 +97,10 @@ create table Based_on
 (team_nm varchar(255),
 contestant_id int,
 primary key (team_nm, contestant_id),
-foreign key (team_nm) references Team,
+constraint fk_team
+    foreign key (team_nm)
+    references Team(team_nm)
+    on delete cascade,
 foreign key (contestant_id) references Contestant);
 
 /*Create the 'blogs' table*/

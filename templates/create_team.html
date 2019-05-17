@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block content %}
 <h2>Create Team</h2>
-<h4>Select 4 Contestant</h4>
+<h4>Select four contestants</h4>
 <div class="content-section">
 <form method="POST" action="">
 <table style="width:100%">
@@ -9,7 +9,7 @@
         <th>Selected</th>
         <th>Contestant</th>
     </tr>
-   {% for contestant in contestants %}
+{% for contestant in contestants %}
       <tr>
         <td><input type="checkbox" name="checkboxes-{{ contestant.contestant_id }}" value="{{ contestant.contestant_id }}"></td>
         <td>{{ contestant.name }}</td>

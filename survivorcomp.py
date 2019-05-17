@@ -1,7 +1,7 @@
 ### Example inspired by Tutorial at https://www.youtube.com/watch?v=MwZwr5Tvyxo&list=PL-osiE80TeTs4UjLw5MM6OjgkjFeUxCYH
 ### However the actual example uses sqlalchemy which uses Object Relational Mapper, which are not covered in this course. I have instead used natural sQL queries for this demo. 
 from flask import Flask, render_template, url_for, flash, redirect, request
-from forms import RegistrationForm, BlogForm, EditForm, DelForm, LoginForm, LogoutForm, CreateTeam
+from forms import RegistrationForm, BlogForm, EditForm, DelForm, LoginForm, LogoutForm
 import pandas as pd
 import seaborn as sns # configure to webapp
 import matplotlib.pyplot as plt, mpld3
@@ -113,16 +113,16 @@ def find_superstars():
     query = \
         "SELECT contestant_id FROM Contestant \
         WHERE NOT EXISTS ( \
-            SELECT team_nm FROM Team) \
+            SELECT team_nm FROM Team \
             EXCEPT \
             SELECT team_nm FROM Based_on \
             WHERE Contestant.contestant_id=Based_on.contestant_id \
-            )"
+            );"
 
     c.execute(query)
     super_id = c.fetchall()
 
-    print("\n\nSuper starts:\n")
+    print("\n\nSuper stars:\n")
     print(super_id, "\n\n")
 
 def apply_status(user):
@@ -298,7 +298,6 @@ def contestants():
 @app.route("/create-team", methods=['GET', 'POST'])
 def create_team():
     c, conn = get_db()
-
     f = request.form
     pre_sql = []
     team_name = f.get('team_name', None)
@@ -311,13 +310,30 @@ def create_team():
             pre_sql.append(
                 "('{}',{})".format(team_name, str(k))
             )
+
     if len(pre_sql) == 4 and team_name:
-        # TODO: what is user_nm and comp_nm? 
-        c.execute('INSERT INTO Team VALUES (?,?,?)', [team_name, 'BigJase', 'Milton Crew'])
+        # need to add the user to the participating user table
+        c, conn = get_db()
+        c.execute('INSERT INTO ParticipatingUser (user_nm) VALUES (?)', [USERNM.name])
         conn.commit()
+        
+        # add the team name to the Team table
+        c, conn = get_db()
+        c.execute('INSERT INTO Team (team_nm, user_nm, comp_nm) \
+            VALUES (?,?,?)', [team_name, USERNM.name, COMPNAME])
+        conn.commit()
+
+        # print("This is pre_sql:\n", pre_sql, "\n")
+
+        # then insert 
         c, conn = get_db()
         c.execute('INSERT INTO Based_on (team_nm, contestant_id) VALUES ' + ','.join(pre_sql))
         conn.commit()
+
+        # update the user status
+        apply_status(USERNM.name)
+
+        # redirect to the leaderboard
         return redirect(url_for('board'))
 
     # select the contestant details and put into data frame
@@ -353,17 +369,6 @@ def register():
         
     return render_template('register.html', title='Register', form=form)
 
-def check_status(user):
-
-    c, conn = get_db()
-    c.execute('SELECT user_nm FROM ParticipatingUser') 
-    results = c.fetchall()
-    
-    if user in results:
-        return 'Not Passive'
-    
-    return 'Passive'
-
 #Add Login feature
 @app.route("/login", methods=['GET', 'POST'])
 def login():
@@ -373,7 +378,7 @@ def login():
     results = c.fetchall()
     users = [item['user_nm'] for item in results]
 
-    print('\n',users,'\n')
+    # print('\n',users,'\n')
 
     form = LoginForm()
     if form.validate_on_submit():
@@ -381,21 +386,19 @@ def login():
         if form.username.data not in users:
             flash('User not found!')
         else:
-            #USERNM.set_user_nm((choices[form.username.data][1]))
-            # USERNM.set_user_nm(form.username.data)
-            # USERNM.set_status(check_status(form.username.data))
-            # feed_layout()
-            choices = form.username.choices
-            USERNM.set_user_nm((choices[form.username.data][1]))
+            # Set the user name and status
+            USERNM.set_user_nm(form.username.data)
+            apply_status(USERNM.name)
 
             # update the layout form
-            apply_status(USERNM.name)
             feed_layout()
-        
-        return redirect(url_for('contestants'))
+            
+            # go to myaccount
+            if USERNM.status=='passive':
+                return redirect(url_for('create_team'))
+            else:
+                return redirect(url_for('board'))
 
-
-            return redirect(url_for('myaccount'))
     return render_template('login.html', form=form, error=error)
 
 #Add myaacount feature
@@ -421,7 +424,7 @@ def myaccount():
         print("pressed")
         return redirect(url_for('myaccount_delete'))
 
-    return render_template('myaccount.html', results=results, form = form)
+    return render_template('myaccount.html', results=results, form=form)
 
 # @app.route("/logout")
 @app.route("/myaccount/delete", methods=['GET', 'POST'])
@@ -433,9 +436,13 @@ def myaccount_delete():
             print('Delete request')
             # delete the post
             c, conn = get_db()
-            c.execute('DELETE FROM Team \
-                WHERE user_nm="{0}"'.format(USERNM.name))
+            c.execute('DELETE FROM CompUser \
+                WHERE user_nm="{}"'.format(USERNM.name))
             conn.commit()
+            
+            # reset the username and tell the layout
+            USERNM.logout()
+
             return redirect(url_for('login'))
         elif 'cancel_btn' in request.form:
             print('Cancel request')

@@ -28,7 +28,7 @@ seasons = scrape.WikiTable(url= SERIES_URL,
                                           elements=['a'])).df
 
 # get the latest season contestants
-latest = seasons.iloc[-1]['Season title']
+latest = seasons.iloc[-2]['Season title']
 target_url = ROOT_URL + latest
 
 # table class
@@ -37,15 +37,22 @@ tclass = 'wikitable sortable'
 # get the contestants
 voted_out = 'Main game'
 cons = scrape.WikiTable(url=target_url,
-                            table_class=tclass,
-                            columns=['Contestant', voted_out]).df.rename(columns={voted_out:'Voted out'})
+                        table_class=tclass,
+                        columns=['Contestant', voted_out]).df.rename(columns={voted_out:'Voted out'})
 
-# strip the text
-for col in cons.columns:
-    cons.loc[:, col] = cons[col].str.strip()
+# # strip the text where we can otherwise throw it away
+def try2strip(text):
+    try:
+        if len(text) > 0:
+            return int(text)
+        else:
+            return None
+    except Exception as e:
+        print(e)
+        return None
 
 cons['Voted out'] = cons['Voted out'].str.split('voted', expand=True)[0].str.strip().str[:-2]
-cons['Voted out'] = cons['Voted out'].apply(lambda x: int(x) if len(x)>0 else None)
+cons['Voted out'] = cons['Voted out'].apply(try2strip)
 cons = cons.sort_values(['Voted out'])
 
 # print('Contestants raw:')
