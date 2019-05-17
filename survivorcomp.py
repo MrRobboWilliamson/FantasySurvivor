@@ -363,59 +363,5 @@ def logout():
 
     return render_template('logout.html', form=form)
 
-# def check_unique(team_members, form):
-#     if len(team_members) > len(list(set(team_members))):
-#         form
-
-@app.route("/create_team", methods=['GET', 'POST'])
-def create_team():
-    error = None
-    
-    c, conn = get_db()    
-    c.execute('SELECT contestant_id, name FROM Contestant')
-    results = c.fetchall()
-    contestants = [(item['contestant_id'], item['name']) for item in results]
-        
-    form = CreateTeam()
-    form.c1.choices = contestants
-    form.c2.choices = contestants
-    form.c3.choices = contestants
-    form.c4.choices = contestants
-    if form.validate_on_submit():
-        team_members = [form.c1.data, form.c2.data, form.c3.data, form.c4.data] 
-        try:
-            form.check_unique(team_members)
-        except Exception as e:
-            flash('Something went wrong: {}'.format(e))
-            print(e)
-            return redirect(url_for('contestants'))
-        
-        # add this user to the ParticipatingUser table
-        c, conn = get_db()
-        c.execute('INSERT INTO ParticipatingUser (user_nm) \
-            VALUES ("{}")'.format(USERNM.name))
-
-        # add the team name to the db
-        c.execute('INSERT INTO Team (team_nm, user_nm, comp_nm) \
-            VALUES ("{}", "{}", "{}")'.format(form.team_nm.data, USERNM.name, COMPNAME))
-
-        # for tm in team_members:
-        for tm in team_members:
-            c.execute('INSERT INTO Based_on (team_nm, contestant_id)\
-                VALUES ("{}", {})'.format(form.team_nm.data, tm))
-        
-        # commit all of the changes
-        conn.commit()
-        
-        # update the user status to participating
-        USERNM.set_status('participating')
-        
-        # update the user details for the layout
-        feed_layout()        
-        
-        return redirect(url_for('contestants'))
-
-    return render_template('create_team.html', form=form, error=error)
-
 if __name__ == '__main__':
     app.run(debug=True)
