@@ -1,7 +1,7 @@
 ### Example inspired by Tutorial at https://www.youtube.com/watch?v=MwZwr5Tvyxo&list=PL-osiE80TeTs4UjLw5MM6OjgkjFeUxCYH
 ### However the actual example uses sqlalchemy which uses Object Relational Mapper, which are not covered in this course. I have instead used natural sQL queries for this demo. 
 from flask import Flask, render_template, url_for, flash, redirect, request
-from forms import RegistrationForm, BlogForm, EditForm, DelForm, LoginForm
+from forms import RegistrationForm, BlogForm, EditForm, DelForm, LoginForm, LogoutForm, CreateTeam
 import pandas as pd
 import seaborn as sns # configure to webapp
 import matplotlib.pyplot as plt, mpld3
@@ -14,7 +14,8 @@ from username import User
 try:
     import initialise
 except Exception as e:
-    print('InitError: {}'.format(e))
+    print('\n\n')
+    print('Scraper not working: {}\n\n'.format(e))
 
 # initialise user object
 USERNM = User()
@@ -99,6 +100,45 @@ def chart_progress(df):
     plt.tight_layout()
     return mpld3.fig_to_html(fig)
 
+def find_superstars():
+    '''
+    This function will perform a division query to see if there are any
+    contestants that have been picked by all users
+    '''
+
+    # connect to the database
+    c, conn = get_db()
+    
+    # get all of the teams and contestants
+    query = \
+        "SELECT contestant_id FROM Contestant \
+        WHERE NOT EXISTS ( \
+            SELECT team_nm FROM Team) \
+            EXCEPT \
+            SELECT team_nm FROM Based_on \
+            WHERE Contestant.contestant_id=Based_on.contestant_id \
+            )"
+
+    c.execute(query)
+    super_id = c.fetchall()
+
+    print("\n\nSuper starts:\n")
+    print(super_id, "\n\n")
+
+def apply_status(user):
+    '''
+    Checks the status by seeing if the user is in participating or not
+    '''
+    c, conn = get_db()
+    c.execute("select user_nm from ParticipatingUser")
+    result = c.fetchall()
+    pusers = [item['user_nm'] for item in result]
+
+    if user in pusers:
+        USERNM.set_status('participating')
+    else:
+        USERNM.set_status('passive')
+
 @app.context_processor
 def feed_layout():
     c, conn = get_db()
@@ -107,8 +147,7 @@ def feed_layout():
         Where ep_no is not Null \
         order by ep_no")
     out_cons = c.fetchall()
-    
-    return dict(out_cons=out_cons)
+    return dict(out_cons=out_cons, user=USERNM)
 
 @app.route("/blog", methods=['GET', 'POST'])
 def blog():
@@ -246,8 +285,9 @@ def contestants():
     tot_picks = contestants['num_picks'].sum()
     contestants['popular'] = (contestants['num_picks'] / float(tot_picks)).apply(lambda x: '{:.0%}'.format(x))
     contestants = contestants.sort_values(['num_picks', 'name'], ascending=[False, True])
-
-    print('\n', contestants, '\n')
+    
+    # print('\n', contestants, '\n')
+    find_superstars()
 
     # convert back dictionary 
     contestants = contestants.to_dict('records')
@@ -309,8 +349,8 @@ def register():
         conn.commit()
 
         flash('Account created for {}!'.format(form.username.data), 'success')
-        return redirect(url_for('board'))
-
+        return redirect(url_for('login'))
+        
     return render_template('register.html', title='Register', form=form)
 
 def check_status(user):
@@ -342,9 +382,17 @@ def login():
             flash('User not found!')
         else:
             #USERNM.set_user_nm((choices[form.username.data][1]))
-            USERNM.set_user_nm(form.username.data)
-            USERNM.set_status(check_status(form.username.data))
+            # USERNM.set_user_nm(form.username.data)
+            # USERNM.set_status(check_status(form.username.data))
+            # feed_layout()
+            choices = form.username.choices
+            USERNM.set_user_nm((choices[form.username.data][1]))
+
+            # update the layout form
+            apply_status(USERNM.name)
             feed_layout()
+        
+        return redirect(url_for('contestants'))
 
 
             return redirect(url_for('myaccount'))
@@ -361,6 +409,7 @@ def myaccount():
         FROM Team t, Contestant c, Based_on b \
         Where b.team_nm = t.team_nm AND \
         b.contestant_id = c.contestant_id AND user_nm = "{0}"'.format(USERNM.name))
+
     results = c.fetchall()
     print([item for item in results])
     #users = [(results.index(item), item['name']) for item in results]
@@ -397,6 +446,27 @@ def myaccount_delete():
             print("That didn't work!")
 
     return render_template('delete.html', form=form)
+#Add create team feature
+# if the user is in the CompUser table and not in the Participating user table
+# then this feature is available otherwise it is replace with my team
+@app.route("/logout", methods=['GET', 'POST'])
+def logout():
+    # get the form with the buttons
+    form = LogoutForm()
+    if form.validate_on_submit():
+        if 'logout_btn' in request.form:
+            # print('Delete request')
+            # delete the post
+            USERNM.logout()
+        elif 'cancel_btn' in request.form:
+            pass
+            # if cancelled, then just redirect            
+        else:
+            print("That didn't work!")
+
+        return redirect(url_for('board'))
+
+    return render_template('logout.html', form=form)
 
 if __name__ == '__main__':
     app.run(debug=True)

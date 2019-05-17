@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextField, TextAreaField, SelectField, DateTimeField, validators
-from wtforms.validators import DataRequired, Length, Email, EqualTo
+from wtforms import Form, StringField, PasswordField, SubmitField, BooleanField, TextField, TextAreaField, SelectField, DateTimeField, validators, ValidationError
+from wtforms.validators import DataRequired, Length, Email, EqualTo, NoneOf
 import datetime
 
 class RegistrationForm(FlaskForm):
@@ -30,4 +30,24 @@ class EditForm(FlaskForm):
 class DelForm(FlaskForm):
     # content = TextAreaField('Edit message', validators=[DataRequired()])
     delete_btn = SubmitField('Delete')
+    cancel_btn = SubmitField('Cancel')
+
+class CreateTeam(FlaskForm):
+    team_nm = StringField('Team name', validators=[DataRequired()], render_kw=dict(placeholder="Cool name here"))
+    c1 = SelectField('Contestant 1', choices=[], coerce=int)
+    c2 = SelectField('Contestant 2', choices=[], coerce=int)
+    c3 = SelectField('Contestant 3', choices=[], coerce=int)
+    c4 = SelectField('Contestant 4', choices=[], coerce=int)
+
+    submit = SubmitField('Submit')
+    
+    def check_unique(self, member_ids):
+        # print("\n\nThis is from the form\n", member_ids, '\n\n')
+        if len(member_ids) > len(list(set(member_ids))):
+            raise ValidationError('Team members must be unique')
+         
+# logout form is just a button
+class LogoutForm(FlaskForm):
+    # content = TextAreaField('Edit message', validators=[DataRequired()])
+    logout_btn = SubmitField('Logout')
     cancel_btn = SubmitField('Cancel')
