@@ -384,7 +384,7 @@ def myaccount_delete():
             print('Delete request')
             # delete the post
             c, conn = get_db()
-            c.execute('DELETE FROM ParticipatingUser \
+            c.execute('DELETE FROM Team \
                 WHERE user_nm="{0}"'.format(USERNM.name))
             conn.commit()
             return redirect(url_for('login'))
