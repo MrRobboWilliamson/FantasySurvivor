@@ -42,7 +42,7 @@ class CreateTeam(FlaskForm):
     submit = SubmitField('Submit')
     
     def check_unique(self, member_ids):
-        print("\n\nThis is from the form\n", member_ids, '\n\n')
+        # print("\n\nThis is from the form\n", member_ids, '\n\n')
         if len(member_ids) > len(list(set(member_ids))):
             raise ValidationError('Team members must be unique')
          
