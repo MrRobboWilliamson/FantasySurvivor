@@ -29,14 +29,6 @@
             <div class="navbar-nav mr-auto">
               <a class="nav-item nav-link" href="{{ url_for('blog') }}">Blog</a>
               <a class="nav-item nav-link" href="{{ url_for('contestants') }}">Survivor Contestants</a>
-<<<<<<< HEAD
-              <a class="nav-item nav-link" href="{{ url_for('create_team') }}">Create Team</a>
-            </div>
-            <!-- Navbar Right Side -->
-            <div class="navbar-nav">
-             
-              <a class="nav-item nav-link" href="{{ url_for('login') }}">Login</a>
-=======
               {% if user.name %}
               {% if user.status == "passive" %}
               <a class="nav-item nav-link" href="{{ url_for('create_team') }}">Create Team</a>
@@ -54,7 +46,6 @@
               {% else %}
               <a class="nav-item nav-link" href="{{ url_for('logout') }}">Logout</a>
               {% endif %}
->>>>>>> division
               <a class="nav-item nav-link" href="{{ url_for('register') }}">New User</a>
             </div>
           </div>
