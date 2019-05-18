@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+{% block content %}
+<h3>Select four contestants</h3>
+<div class="content-section">
+<form method="POST" action="">
+<table style="width:100%">
+    <tr>
+        <th>Selection</th>
+        <th>Contestant</th>
+    </tr>
+{% for contestant in contestants %}
+      <tr>
+        <td><input type="checkbox" name="checkboxes-{{ contestant.contestant_id }}" value="{{ contestant.contestant_id }}"></td>
+        <td>{{ contestant.name }}</td>
+    </tr>
+{% endfor %}
+</table>
+
+<div class="form-group">
+    name:
+    <input type="text" name="team_name" value="" aria-label="team name">
+</div>
+<div class="form-group">
+    <input type="submit" name="submit" value="create my team">
+</div>
+</form>
+</div>
+{% endblock content %}

@@ -1,29 +1,42 @@
 {% extends "layout.html" %}
 {% block content %}
-<h2>Create Team</h2>
-<h4>Select four contestants</h4>
-<div class="content-section">
 <form method="POST" action="">
-<table style="width:100%">
-    <tr>
-        <th>Selected</th>
-        <th>Contestant</th>
-    </tr>
-{% for contestant in contestants %}
-      <tr>
-        <td><input type="checkbox" name="checkboxes-{{ contestant.contestant_id }}" value="{{ contestant.contestant_id }}"></td>
-        <td>{{ contestant.name }}</td>
-    </tr>
-{% endfor %}
-</table>
+        {{ form.hidden_tag() }}
+        <fieldset class="form-group">
+            <legend class="border-bottom mb-4"><h3>Create your team</h3></legend>
+            <div class="form-group">
+                {% if form.teamname.errors %}
+                    {{ form.teamname(class="form-control form-control-lg is-invalid") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.teamname.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {{ form.teamname(class="form-control form-control-lg") }}
+                {% endif %}
+            </div>
 
-<div class="form-group">
-    name:
-    <input type="text" name="team_name" value="" aria-label="team name">
-</div>
-<div class="form-group">
-    <input type="submit" name="submit" value="create my team">
-</div>
-</form>
-</div>
+            <div class="form-group">
+                <table span='100%'>
+                <tr>
+                    <th><h4>Selection</h4></th>
+                </tr>
+                {% for contestant in contestants %}
+                <tr>
+                    <td style="text-align: center" width=4>
+                        <input type="checkbox" name="checkboxes-{{ contestant.contestant_id }}" value="{{ contestant.contestant_id }}">
+                    </td>
+                    <td>
+                        <h5>{{ contestant.name }}</h5>
+                    </td>
+                </tr>
+                {% endfor %}
+                </table>
+            </div>
+        </fieldset>
+        <div class="form-group">
+            {{ form.submit(class="btn btn-outline-info") }}
+        </div>
+    </form>
 {% endblock content %}

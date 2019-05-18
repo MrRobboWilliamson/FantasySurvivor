@@ -1,7 +1,13 @@
 {% extends "layout.html" %}
 {% block content %}
+{% if user_nm == None %}
+    <h3>Login to contribute</h3>
+{% else %}
+    <h3>Message board</h3>
+{% endif %}
+{% if user_nm != None %}
 <div class="content-section">
-    {% if user_nm != None %}
+    
     <form method="POST" action="">
         {{ form.hidden_tag() }}
         <fieldset class="form-group">
@@ -25,10 +31,8 @@
             {{ form.submit(class="btn btn-outline-info") }}
         </div>
     </form>
-    {% else %}
-        <h3>Login to send a message</h3>
-    {% endif %}
 </div>
+{% endif %}
     {% for post in posts %}
       <article class="media content-section">
         <div class="media-body">

@@ -8,6 +8,10 @@ h1, h2, h3, h4, h5, h6 {
   color: #444444;
 }
 
+input[type=checkbox] {
+    transform: scale(3.0);
+  }
+
 .button-my {
   background-color: #5f788a; /* Grey/blue */
   border: none;

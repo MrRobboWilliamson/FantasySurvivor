@@ -160,10 +160,12 @@ Insert into Team values ('Fire', 'Tess', 'Milton Crew');
 Insert into Team values ('Earth', 'Rambo', 'Milton Crew');
 Insert into Team values ('Veracity', 'Sarah', 'Milton Crew');
 
--- Insert into blogs(username, title, content) values ('Jane', 'How to Make Google Docs Look Like Dropbox Paper', 'I love Dropbox Paper. Some people have tons of complaints about it, but I’m not one of those people. It’s one of my favorite tools and I use it for all kinds of work and home documents.');
--- insert into blogs(username, title, content) VALUES ('James', 'The best Data Science courses', 'One of the best courses I have taken is INFS7901');
--- insert into blogs(username, title, content) VALUES ('James', 'How to Build a Data Science Portfolio', 'The best way to build a data science portfolio is to do a project');
--- insert into blogs(username, title, content) VALUES ('Jane', 'Blockchain Could Unlock Vital Funding to Tackle Climate Change', 'Billions of dollars in promised funding is failing to reach the world’s poorest countries — but technologists have a fix in mind .....');
-
-
-/* I think I need to commit here */
+/* create an assertion to ensure that each team has 4 users */
+/*-- ASSERT (4.0 = (SELECT AVG(count)  
+--                 FROM (
+--                 SELECT count(*) as count
+--                 FROM Based_on
+--                 GROUP BY team_nm
+--                 )
+--             )
+--         ); */

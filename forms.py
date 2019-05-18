@@ -1,7 +1,23 @@
 from flask_wtf import FlaskForm
-from wtforms import Form, StringField, PasswordField, SubmitField, BooleanField, TextField, TextAreaField, SelectField, DateTimeField, validators, ValidationError
+from wtforms import Form, StringField, SubmitField, TextAreaField, validators, BooleanField, FormField, FieldList
 from wtforms.validators import DataRequired, Length, Email, EqualTo, NoneOf
-import datetime
+import sqlite3
+
+# Turn the results from the database into a dictionary
+def dict_factory(cursor, row):
+    d = {}
+    for idx, col in enumerate(cursor.description):
+        d[col[0]] = row[idx]
+    return d
+
+def get_db():
+    conn = sqlite3.connect('survivor.db')
+    conn.row_factory = dict_factory
+    c = conn.cursor()
+
+    # enforce integrity constraints 
+    c.execute("PRAGMA foreign_keys=ON;")
+    return c, conn
 
 class RegistrationForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=2, max=20)])
@@ -39,4 +55,9 @@ class LogoutForm(FlaskForm):
     cancel_btn = SubmitField('Cancel')
 
 # create team form
-# class CreateTeam(FlaskForm):
+class CreateTeam(FlaskForm):
+    teamname = StringField('Team name', validators=[DataRequired(), Length(min=2, max=20)], render_kw=dict(placeholder='Name team'))
+    submit = SubmitField('Submit')
+
+
+

@@ -1,7 +1,7 @@
 ### Example inspired by Tutorial at https://www.youtube.com/watch?v=MwZwr5Tvyxo&list=PL-osiE80TeTs4UjLw5MM6OjgkjFeUxCYH
 ### However the actual example uses sqlalchemy which uses Object Relational Mapper, which are not covered in this course. I have instead used natural sQL queries for this demo. 
 from flask import Flask, render_template, url_for, flash, redirect, request
-from forms import RegistrationForm, BlogForm, EditForm, DelForm, LoginForm, LogoutForm
+from forms import RegistrationForm, BlogForm, EditForm, DelForm, LoginForm, LogoutForm, CreateTeam
 import pandas as pd
 import seaborn as sns # configure to webapp
 import matplotlib.pyplot as plt, mpld3
@@ -11,11 +11,11 @@ import datetime
 from username import User
 
 # catch initialise exceptions because it won't always work
-# try:
-#     import initialise
-# except Exception as e:
-#     print('\n\n')
-#     print('Scraper not working: {}\n\n'.format(e))
+try:
+    import initialise
+except Exception as e:
+    print('\n\n')
+    print('Scraper not working: {}\n\n'.format(e))
 
 # initialise user object
 USERNM = User()
@@ -296,54 +296,49 @@ def contestants():
 
 @app.route("/create-team", methods=['GET', 'POST'])
 def create_team():
-    c, conn = get_db()
-    f = request.form
+    c, conn = get_db()    
+
+    # get the contestants
+    c.execute('Select contestant_id, name from contestant')
+    contestants = c.fetchall()
+    form = CreateTeam()
     pre_sql = []
-    team_name = f.get('team_name', None)
-    if team_name:
-        for i,k in f.items():
-            i = str(i)
-            if 'checkboxes-' not in i:
-                continue
+    # f = request
+    if form.validate_on_submit():
+        team_name = form.teamname.data
+        for con in contestants:
+            con_id = con['contestant_id']
+            checkbox = "checkboxes-{}".format(con_id) 
+            if checkbox in request.form:
+                # print(request.form[checkbox])            
+                pre_sql.append(
+                    "('{}',{})".format(team_name, str(con_id))
+                )
 
-            pre_sql.append(
-                "('{}',{})".format(team_name, str(k))
-            )
+        if len(pre_sql) == 4 and team_name:
+            # need to add the user to the participating user table
+            c, conn = get_db()
+            c.execute('INSERT INTO ParticipatingUser (user_nm) VALUES (?)', [USERNM.name])
+            conn.commit()
+            
+            # add the team name to the Team table
+            c, conn = get_db()
+            c.execute('INSERT INTO Team (team_nm, user_nm, comp_nm) \
+                VALUES (?,?,?)', [team_name, USERNM.name, COMPNAME])
+            conn.commit()
 
-    if len(pre_sql) == 4 and team_name:
-        # need to add the user to the participating user table
-        c, conn = get_db()
-        c.execute('INSERT INTO ParticipatingUser (user_nm) VALUES (?)', [USERNM.name])
-        conn.commit()
-        
-        # add the team name to the Team table
-        c, conn = get_db()
-        c.execute('INSERT INTO Team (team_nm, user_nm, comp_nm) \
-            VALUES (?,?,?)', [team_name, USERNM.name, COMPNAME])
-        conn.commit()
+            # then insert 
+            c, conn = get_db()
+            c.execute('INSERT INTO Based_on (team_nm, contestant_id) VALUES ' + ','.join(pre_sql))
+            conn.commit()
 
-        # print("This is pre_sql:\n", pre_sql, "\n")
+            # update the user status
+            apply_status(USERNM.name)
 
-        # then insert 
-        c, conn = get_db()
-        c.execute('INSERT INTO Based_on (team_nm, contestant_id) VALUES ' + ','.join(pre_sql))
-        conn.commit()
+            # redirect to the leaderboard
+            return redirect(url_for('board'))
 
-        # update the user status
-        apply_status(USERNM.name)
-
-        # redirect to the leaderboard
-        return redirect(url_for('board'))
-
-    # select the contestant details and put into data frame
-    c.execute("SELECT * FROM contestant")
-    ctemp = pd.DataFrame(data=c.fetchall())
-    # print('\n', ctemp, '\n')
-
-    # convert back dictionary
-    contestants = ctemp.to_dict('records')
-
-    return render_template('create_team.html', contestants=contestants)
+    return render_template('create_team.html', form=form, contestants=contestants)
 
 # Add User
 # sets the html file to be displayed - assigns this method to that page
@@ -404,8 +399,8 @@ def login():
 @app.route("/myaccount", methods=['GET', 'POST'])
 def myaccount():
     c, conn = get_db()
-    print(USERNM.name)
-    print("{0}".format(USERNM.name))
+    # print(USERNM.name)
+    # print("{0}".format(USERNM.name))
     
     c.execute('SELECT name, age, origin_town  \
         FROM Team t, Contestant c, Based_on b \
@@ -413,10 +408,10 @@ def myaccount():
         b.contestant_id = c.contestant_id AND user_nm = "{0}"'.format(USERNM.name))
 
     results = c.fetchall()
-    print([item for item in results])
+    # print([item for item in results])
     #users = [(results.index(item), item['name']) for item in results]
-    print(USERNM.name)
-    print(results)
+    # print(USERNM.name)
+    # print(results)
 
     form = DelForm()
     if form.validate_on_submit():

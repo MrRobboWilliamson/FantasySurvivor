@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="content-section">
 <h3>Competition Standings</h3>
+<div class="content-section">
 
 <table style="width:100%">
     <tr>
@@ -18,8 +18,9 @@
 {% endfor %}
 </table>
 </div>
+<h3>Progress tracker</h3>
 <div class="content-section">
-    <h3>Progress tracker</h3>
+    
     {{ plot|safe }}
 </div>
 {% endblock content %}
