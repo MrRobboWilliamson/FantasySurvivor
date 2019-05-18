@@ -11,11 +11,11 @@ import datetime
 from username import User
 
 # catch initialise exceptions because it won't always work
-try:
-    import initialise
-except Exception as e:
-    print('\n\n')
-    print('Scraper not working: {}\n\n'.format(e))
+# try:
+#     import initialise
+# except Exception as e:
+#     print('\n\n')
+#     print('Scraper not working: {}\n\n'.format(e))
 
 # initialise user object
 USERNM = User()
@@ -120,10 +120,10 @@ def find_superstars():
             );"
 
     c.execute(query)
-    super_id = c.fetchall()
-
-    print("\n\nSuper stars:\n")
-    print(super_id, "\n\n")
+    super_stars = c.fetchall()
+    
+    # return a list of contestant ids
+    return [item['contestant_id'] for item in super_stars]
 
 def apply_status(user):
     '''
@@ -287,12 +287,11 @@ def contestants():
     contestants = contestants.sort_values(['num_picks', 'name'], ascending=[False, True])
     
     # print('\n', contestants, '\n')
-    find_superstars()
+    super_stars = find_superstars()
 
     # convert back dictionary 
     contestants = contestants.to_dict('records')
-
-    return render_template('contestants.html', contestants=contestants)
+    return render_template('contestants.html', contestants=contestants, super_stars=super_stars)
 
 
 @app.route("/create-team", methods=['GET', 'POST'])

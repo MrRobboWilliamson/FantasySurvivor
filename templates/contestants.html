@@ -8,6 +8,7 @@
         <th>Age</th>
         <th>Home town</th>
         <th>Popularity</th>
+        <th>Status</th>
     </tr>
    {% for contestant in contestants %}
       <tr>
@@ -15,6 +16,12 @@
         <td>{{ contestant.age }}</td>
         <td>{{ contestant.origin_town }}</td>
         <td>{{ contestant.popular }}</td>
+        <td>{% if contestant.contestant_id in super_stars %}
+                {{ 'Superstar!' }}
+            {% else %}
+                {{ '' }}
+            {% endif %}
+        </td>
     </tr>
 {% endfor %}
 </table>
