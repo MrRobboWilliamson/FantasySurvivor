@@ -293,7 +293,6 @@ def contestants():
     contestants = contestants.to_dict('records')
     return render_template('contestants.html', contestants=contestants, super_stars=super_stars)
 
-
 @app.route("/create-team", methods=['GET', 'POST'])
 def create_team():
     c, conn = get_db()    
@@ -398,31 +397,35 @@ def login():
 #Add myaacount feature
 @app.route("/myaccount", methods=['GET', 'POST'])
 def myaccount():
-    c, conn = get_db()
-    # print(USERNM.name)
-    # print("{0}".format(USERNM.name))
-    
-    c.execute('SELECT name, age, origin_town  \
+    # Don't show this page if we're not logged in 
+    if USERNM.name == None:
+        redirect(url_for('board'))
+
+    c, conn = get_db()    
+    # get the team members
+    c.execute('SELECT name, age, origin_town, ep_no  \
         FROM Team t, Contestant c, Based_on b \
         Where b.team_nm = t.team_nm AND \
         b.contestant_id = c.contestant_id AND user_nm = "{0}"'.format(USERNM.name))
-
     results = c.fetchall()
-    # print([item for item in results])
-    #users = [(results.index(item), item['name']) for item in results]
-    # print(USERNM.name)
-    # print(results)
+
+    # get the team name
+    team_nm=None
+    if USERNM.status=='participating':
+        c.execute('Select team_nm from team where user_nm=?', [USERNM.name])
+        team_nm = c.fetchall()[0]['team_nm']
+        # print(team_nm)
 
     form = DelForm()
     if form.validate_on_submit():
         print("pressed")
         return redirect(url_for('myaccount_delete'))
 
-    return render_template('myaccount.html', results=results, form=form)
+    return render_template('myaccount.html', results=results, form=form, team_nm=team_nm, user_nm=USERNM.name)
 
 # @app.route("/logout")
-@app.route("/myaccount/delete", methods=['GET', 'POST'])
-def myaccount_delete():
+@app.route("/myaccount/delete/<username>", methods=['GET', 'POST'])
+def myaccount_delete(username):
     # get the form with the buttons
     form = DelForm()
     if form.validate_on_submit():
@@ -431,7 +434,7 @@ def myaccount_delete():
             # delete the post
             c, conn = get_db()
             c.execute('DELETE FROM CompUser \
-                WHERE user_nm="{}"'.format(USERNM.name))
+                WHERE user_nm="{}"'.format(username))
             conn.commit()
             
             # reset the username and tell the layout

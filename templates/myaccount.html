@@ -1,29 +1,39 @@
 {% extends "layout.html" %}
 {% block content %}
-<h2>These are your team members</h2>
+
+{% if team_nm %}
+<div>
+<h4>Team members for {{ team_nm }}</h4>
+</div>
 <div class="content-section">
 <table style="width:100%">
     <tr>
         <th>Contestant</th>
         <th>Age</th>
         <th>Home town</th>
+        <th>Status</th>
     </tr>
    {% for result in results %}
       <tr>
         <td>{{ result.name }}</td>
         <td>{{ result.age }}</td>
         <td>{{ result.origin_town }}</td>
+        {% if result.ep_no %}
+            <td>out!</td>
+        {% else %}
+            <td>still in</td>
+        {% endif %}
+
     </tr>
 {% endfor %}
 </table>
+</div> 
+{% else %}
+<div>
+    <h5>You need to <a href='/create-team'>create</a> a team</h5>
 </div>
-<form method="POST" action="">
-    {{ form.hidden_tag() }}
-    <fieldset class="form-group">
-        <legend class="border-bottom mb-4">Delete</legend>
-<div class="form-group">
-    {{ form.delete_btn(class="btn btn-outline-info") }}
+{% endif %}
+<div>
+    <h5><a href="/myaccount/delete/{{ user_nm }}" class="ml-2" >delete account</a></h5>
 </div>
-</fieldset>
-</form>
 {% endblock content %}

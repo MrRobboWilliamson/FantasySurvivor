@@ -27,7 +27,7 @@
           </button>
           <div class="collapse navbar-collapse" id="navbarToggle">
             <div class="navbar-nav mr-auto">
-              <a class="nav-item nav-link" href="{{ url_for('blog') }}">Blog</a>
+              <a class="nav-item nav-link" href="{{ url_for('blog') }}">Message Board</a>
               <a class="nav-item nav-link" href="{{ url_for('contestants') }}">Survivor Contestants</a>
               {% if user.name and user.status == "passive" %}
               <!-- {% if user.status == "passive" %} -->
