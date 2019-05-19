@@ -336,6 +336,9 @@ def create_team():
 
             # redirect to the leaderboard
             return redirect(url_for('board'))
+        else:
+            flash("Please pick four team members")
+
 
     return render_template('create_team.html', form=form, contestants=contestants)
 
