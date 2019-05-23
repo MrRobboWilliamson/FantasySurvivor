@@ -139,6 +139,23 @@ def apply_status(user):
     else:
         USERNM.set_status('passive')
 
+def print_log():
+    c, conn = get_db()
+    c.execute('SELECT * FROM USER_LOG ORDER BY timestamp DESC LIMIT 10')
+    result = c.fetchall()
+
+    print ('\n\nShowing top 6 results from user_log:')
+    
+    print(' _' * 42)
+
+    print('| {: <19}| {: <19}| {: <19}| {: <19}|'.format('USER', 'TIME', 'EMAIL', 'ACTION'))
+    print('|{:-<20}+{:-<20}+{:-<20}+{:-<20}|'.format('', '', '', ''))
+    for item in result:
+        print('| {: <19}| {: <19}| {: <19}| {: <19}|'.format(
+            item['user_nm'], item['timestamp'], item['email'], item['action']))
+
+    print('¯' * 85 + '\n')
+
 @app.context_processor
 def feed_layout():
     c, conn = get_db()
@@ -361,6 +378,7 @@ def register():
         conn.commit()
 
         flash('Account created for {}!'.format(form.username.data), 'success')
+        print_log()
         return redirect(url_for('login'))
         
     return render_template('register.html', title='Register', form=form)
@@ -442,6 +460,9 @@ def myaccount_delete(username):
             
             # reset the username and tell the layout
             USERNM.logout()
+
+            # print log
+            print_log()
 
             return redirect(url_for('login'))
         elif 'cancel_btn' in request.form:
