@@ -154,7 +154,7 @@ def print_log():
         print('| {: <19}| {: <19}| {: <19}| {: <19}|'.format(
             item['user_nm'], item['timestamp'], item['email'], item['action']))
 
-    print('¯' * 85 + '\n')
+    print('-' * 85 + '\n')
 
 @app.context_processor
 def feed_layout():
