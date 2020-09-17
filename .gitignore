@@ -1,4 +1,5 @@
 .vscode/*
 pytest_cache/*
+fsenv/*
 *.db
 __pycache__/*
