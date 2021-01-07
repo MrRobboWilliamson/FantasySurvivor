@@ -6,6 +6,6 @@ pandas==1.1.2
 seaborn==0.11.0
 mpld3
 bs4
-lxml==4.5.2
+lxml==4.6.2
 requests==2.24.0
 
